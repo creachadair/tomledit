@@ -20,6 +20,17 @@ var controlEsc = [...]byte{
 
 var hexDigit = []byte("0123456789abcdef")
 
+// IsWord reports whether s can be encoded as a bare (unquoted) word in a TOML
+// key-value pair or table name.
+func IsWord(s string) bool {
+	for _, r := range s {
+		if !isWordRune(r) {
+			return false
+		}
+	}
+	return s != ""
+}
+
 // Escape encodes a string to escape characters for a TOML basic string.
 // The result is not quoted, the caller must add quotation marks if needed.
 func Escape(src string) []byte {
