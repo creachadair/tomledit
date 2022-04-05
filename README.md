@@ -2,5 +2,18 @@
 
 [![GoDoc](https://img.shields.io/static/v1?label=godoc&message=reference&color=yellowgreen)](https://pkg.go.dev/github.com/creachadair/tomledit)
 
-Allows structural edits of a TOML document, preserving comments.
-This is a work-in-progress and is not ready for production use.
+This repository a Go library to parse and manipulate the syntactic structure of
+TOML documents. Unlike other TOML libraries, this one does not convert values
+into Go data structures (for that I recommend [github.com/BurntSushi/toml][toml]).
+However, it does preserve the complete structure of its input, including
+comments, allowing a TOML document to be read, manipulated, and written back
+out without loss.
+
+This library is intended to implement the [TOML v1.0.0][spec] specification.
+
+**Handle with care:** This code is a work-in-progress and should not be
+considered ready for production use. The package API is still actively in
+development, and there are not nearly enough tests.
+
+[toml]: https://pkg.go.dev/github.com/BurntSushi/toml
+[spec]: https://toml.io/en/v1.0.0
