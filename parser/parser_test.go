@@ -107,3 +107,25 @@ func TestItems(t *testing.T) {
 		}
 	}
 }
+
+func TestParseKey(t *testing.T) {
+	t.Run("Good", func(t *testing.T) {
+		const input = ` a . "b.c d" . e`
+		key, err := parser.ParseKey(input)
+		if err != nil {
+			t.Fatalf("ParseKey(%q): %v", input, err)
+		}
+		if diff := cmp.Diff(parser.Key{"a", "b.c d", "e"}, key); diff != "" {
+			t.Errorf("Incorrect key result: (+want, -got)\n%s", diff)
+		}
+	})
+
+	t.Run("Bad", func(t *testing.T) {
+		for _, in := range []string{"", "  ", `#nope`, `.garbage`, `extra stuff`} {
+			key, err := parser.ParseKey(in)
+			if err == nil {
+				t.Errorf("ParseKey(%q): got %v, wanted error", in, key)
+			}
+		}
+	})
+}

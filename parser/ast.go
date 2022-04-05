@@ -4,6 +4,7 @@ package parser
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/creachadair/tomledit/scanner"
