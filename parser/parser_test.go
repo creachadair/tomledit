@@ -129,3 +129,34 @@ func TestParseKey(t *testing.T) {
 		}
 	})
 }
+
+func TestParseValue(t *testing.T) {
+	tests := []struct {
+		input, want, comment string
+	}{
+		{"17 # wilkommen\n", "17", "# wilkommen"},
+		{"  false   ", "false", ""},
+		{"'beagle breath'", `'beagle breath'`, ""},
+		{" \t\t true\t\n", "true", ""},
+		{"'''read\nthe\tdocs\n'''", "'''read\nthe\tdocs\n'''", ""},
+		{"\t[\n\t   \n\n]\n", "[]", ""},
+		{"[0,\n1,\n2\n] # bienvenue\n", "[0, 1, 2]", "# bienvenue"},
+		{"{  } # welcome", "{}", "# welcome"},
+		{"{ all . 'we' . are = 42 }", "{all.we.are = 42}", ""},
+	}
+
+	for _, test := range tests {
+		v, err := parser.ParseValue(test.input)
+		if err != nil {
+			t.Errorf("ParseValue(%#q): unexpected error: %v", test.input, err)
+			continue
+		}
+		got := v.String()
+		if got != test.want {
+			t.Errorf("ParseValue(%#q):\n got %q\nwant %q", test.input, got, test.want)
+		}
+		if v.Trailer != test.comment {
+			t.Errorf("ParseValue(%#q): got comment %q, want %q", test.input, v.Trailer, test.comment)
+		}
+	}
+}

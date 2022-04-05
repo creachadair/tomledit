@@ -110,6 +110,40 @@ type Value struct {
 	X       Datum  // the concrete value
 }
 
+// MustValue parses s as a TOML value. It panics if parsing fails.  This is
+// intended for use at program initialization time, or for static string
+// constants that are expected to be always valid.  For all other casesl, use
+// ParseValue to check the error.
+func MustValue(s string) Value {
+	v, err := ParseValue(s)
+	if err != nil {
+		panic(fmt.Errorf("value parse failed; %w", err))
+	}
+	return v
+}
+
+// ParseValue parses s as a TOML value.
+func ParseValue(s string) (Value, error) {
+	p := New(strings.NewReader(s))
+	if _, err := p.require(); err != nil {
+		return Value{}, err
+	}
+	val, err := p.parseValue()
+	if err != nil {
+		return Value{}, err
+	}
+	next, err := p.require(scanner.Comment, scanner.Newline)
+	if err != nil && err != io.EOF {
+		return Value{}, err
+	} else if next == scanner.Comment {
+		val.Trailer = string(p.sc.Text())
+	}
+	if _, err := p.require(); err != io.EOF {
+		return Value{}, fmt.Errorf("at %s: extra input after value", p.sc.Location().First)
+	}
+	return val, nil
+}
+
 func (Value) isItem()      {}
 func (Value) isArrayItem() {}
 
