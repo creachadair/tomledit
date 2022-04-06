@@ -5,7 +5,6 @@ package tomledit_test
 import (
 	"context"
 	"flag"
-	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -13,6 +12,11 @@ import (
 	"github.com/creachadair/tomledit"
 	"github.com/creachadair/tomledit/parser"
 	"github.com/creachadair/tomledit/transform"
+)
+
+var (
+	testInput = flag.String("input", "", "Test input file")
+	doEmit    = flag.Bool("emit", false, "Emit formatted output to stdout")
 )
 
 func mustParse(t *testing.T, s string) *tomledit.Document {
@@ -25,12 +29,15 @@ func mustParse(t *testing.T, s string) *tomledit.Document {
 	return doc
 }
 
-func mustFormat(t *testing.T, doc *tomledit.Document) {
+func mustFormat(t *testing.T, doc *tomledit.Document, more ...string) {
 	t.Helper()
-	fmt.Println("--- formatted output for", t.Name())
-	var out tomledit.Formatter
-	if err := out.Format(os.Stdout, doc); err != nil {
-		t.Fatalf("Format failed: %v", err)
+
+	if *doEmit {
+		t.Logf("Writing formatted output for %s %s", t.Name(), strings.Join(more, " "))
+		var out tomledit.Formatter
+		if err := out.Format(os.Stdout, doc); err != nil {
+			t.Fatalf("Format failed: %v", err)
+		}
 	}
 }
 
@@ -109,6 +116,7 @@ func TestScan(t *testing.T) {
 
 func TestEdit(t *testing.T) {
 	doc := mustParse(t, testDoc)
+	mustFormat(t, doc, "(original document)")
 
 	// Edit some values.
 	doc.First("first", "table", "z").Value.X = parser.Array(nil)
@@ -119,7 +127,7 @@ func TestEdit(t *testing.T) {
 	// Remove an inline table entry.
 	doc.First("first", "table", "a", "c").Remove()
 
-	mustFormat(t, doc)
+	mustFormat(t, doc, "(round 1)")
 
 	// Move the first section to the end.
 	doc.Sections = append(doc.Sections[1:], doc.Sections[0])
@@ -155,10 +163,8 @@ func TestEdit(t *testing.T) {
 		Value: v,
 	}, parser.Comments{"# A final wave goodbye"})
 
-	mustFormat(t, doc)
+	mustFormat(t, doc, "(round 2)")
 }
-
-var testInput = flag.String("input", "", "Test input file")
 
 func TestData(t *testing.T) {
 	if *testInput == "" {
@@ -190,6 +196,8 @@ whisky = { tango = false }
 [stale]
 great_balls_of = "fire"
 `)
+	mustFormat(t, doc, "(original document)")
+
 	p := transform.Plan{
 		{
 			Desc: "Convert snake_case to kebab-case",
@@ -229,9 +237,10 @@ great_balls_of = "fire"
 			T:    transform.Remove(parser.Key{"stale"}),
 		},
 	}
+	t.Log("Applying transformation plan...")
 	ctx := transform.WithLogWriter(context.Background(), os.Stderr)
 	if err := p.Apply(ctx, doc); err != nil {
 		t.Fatalf("Plan failed: %v", err)
 	}
-	mustFormat(t, doc)
+	mustFormat(t, doc, "(after transformation)")
 }
