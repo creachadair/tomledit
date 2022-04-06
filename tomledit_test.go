@@ -11,6 +11,7 @@ import (
 
 	"github.com/creachadair/tomledit"
 	"github.com/creachadair/tomledit/parser"
+	"github.com/creachadair/tomledit/transform"
 )
 
 func mustParse(t *testing.T, s string) *tomledit.Document {
@@ -176,6 +177,45 @@ func TestData(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parsing failed: %v", err)
 	}
+
+	mustFormat(t, doc)
+}
+
+func TestTransform(t *testing.T) {
+	doc := mustParse(t, `[alpha_bravo]
+charlie_delta = 'echo'
+foxtrot = 0
+whisky = { tango = false }
+
+[empty]
+
+[stale]
+great_balls_of = "fire"
+`)
+	t.Logf("Convert snake_case to kebab-case: %v",
+		transform.SnakeToKebab().Apply(doc))
+	t.Logf("Rename section: %v",
+		transform.Rename(
+			parser.Key{"alpha-bravo"},
+			parser.Key{"charlie", "fox trot"},
+		).Apply(doc))
+	t.Logf("Rename inline key: %v",
+		transform.Rename(
+			parser.Key{"charlie", "fox trot", "whisky", "tango"},
+			parser.Key{"epsilon"},
+		).Apply(doc))
+	t.Logf("Move item to a new location: %v",
+		transform.MoveKey(
+			parser.Key{"stale", "great-balls-of"},
+			parser.Key{"empty"},
+			parser.Key{"horking-great-balls-of"},
+		).Apply(doc))
+	t.Logf("Rename non-empty section: %v",
+		transform.Rename(
+			parser.Key{"empty"}, parser.Key{"non-empty"},
+		).Apply(doc))
+	t.Logf("Remove stale section: %v",
+		doc.First("stale").Remove())
 
 	mustFormat(t, doc)
 }
