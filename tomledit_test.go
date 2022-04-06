@@ -3,6 +3,7 @@
 package tomledit_test
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -143,10 +144,7 @@ func TestEdit(t *testing.T) {
 	}
 
 	// Add a mapping to the last section.
-	v, err := parser.ParseValue(`"fenchurch street station"`)
-	if err != nil {
-		t.Fatalf("ParseValue: %v", err)
-	}
+	v := parser.MustValue(`"fenchurch street station"`)
 	s := doc.Sections[len(doc.Sections)-1]
 	s.Items = append(s.Items, &parser.KeyValue{
 		Block: parser.Comments{
@@ -192,30 +190,48 @@ whisky = { tango = false }
 [stale]
 great_balls_of = "fire"
 `)
-	t.Logf("Convert snake_case to kebab-case: %v",
-		transform.SnakeToKebab().Apply(doc))
-	t.Logf("Rename section: %v",
-		transform.Rename(
-			parser.Key{"alpha-bravo"},
-			parser.Key{"charlie", "fox trot"},
-		).Apply(doc))
-	t.Logf("Rename inline key: %v",
-		transform.Rename(
-			parser.Key{"charlie", "fox trot", "whisky", "tango"},
-			parser.Key{"epsilon"},
-		).Apply(doc))
-	t.Logf("Move item to a new location: %v",
-		transform.MoveKey(
-			parser.Key{"stale", "great-balls-of"},
-			parser.Key{"empty"},
-			parser.Key{"horking-great-balls-of"},
-		).Apply(doc))
-	t.Logf("Rename non-empty section: %v",
-		transform.Rename(
-			parser.Key{"empty"}, parser.Key{"non-empty"},
-		).Apply(doc))
-	t.Logf("Remove stale section: %v",
-		doc.First("stale").Remove())
-
+	p := transform.Plan{
+		{
+			Desc: "Convert snake_case to kebab-case",
+			T:    transform.SnakeToKebab(),
+		},
+		{
+			Desc: "Rename section",
+			T: transform.Rename(
+				parser.Key{"alpha-bravo"},
+				parser.Key{"charlie", "fox trot"},
+			),
+		},
+		{
+			Desc: "Rename inline key",
+			T: transform.Rename(
+				parser.Key{"charlie", "fox trot", "whisky", "tango"},
+				parser.Key{"epsilon"},
+			),
+		},
+		{
+			Desc: "Move item to a new location",
+			T: transform.MoveKey(
+				parser.Key{"stale", "great-balls-of"},
+				parser.Key{"empty"},
+				parser.Key{"horking-great-balls-of"},
+			),
+		},
+		{
+			Desc: "Rename now-non-empty section",
+			T: transform.Rename(
+				parser.Key{"empty"},
+				parser.Key{"non-empty"},
+			),
+		},
+		{
+			Desc: "Remove stale section",
+			T:    transform.Remove(parser.Key{"stale"}),
+		},
+	}
+	ctx := transform.WithLogWriter(context.Background(), os.Stderr)
+	if err := p.Apply(ctx, doc); err != nil {
+		t.Fatalf("Plan failed: %v", err)
+	}
 	mustFormat(t, doc)
 }
