@@ -131,6 +131,9 @@ func (d *Document) Find(key ...string) []*Entry {
 // Scan calls f for every key-value pair defined in d, in lexical order.
 // The arguments to f are the complete key of the item and the entry.
 // Traversal continues until all items have been visited or f returns false.
+//
+// Editing the contents of existing sections and mappings is safe.  It is not
+// safe to remove or reorder sections or mappings during a scan.
 func (d *Document) Scan(f func(parser.Key, *Entry) bool) {
 	if !d.Global.scan(d, f) {
 		return
