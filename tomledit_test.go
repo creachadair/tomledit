@@ -34,8 +34,7 @@ func mustFormat(t *testing.T, doc *tomledit.Document, more ...string) {
 
 	if *doEmit {
 		t.Logf("Writing formatted output for %s %s", t.Name(), strings.Join(more, " "))
-		var out tomledit.Formatter
-		if err := out.Format(os.Stdout, doc); err != nil {
+		if err := tomledit.Format(os.Stdout, doc); err != nil {
 			t.Fatalf("Format failed: %v", err)
 		}
 	}

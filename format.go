@@ -11,6 +11,12 @@ import (
 	"github.com/creachadair/tomledit/scanner"
 )
 
+// Format formats the specified document with default options.
+func Format(w io.Writer, doc *Document) error {
+	var out Formatter
+	return out.Format(w, doc)
+}
+
 // Formatter defines options for formatting a TOML document.  The zero value is
 // ready for use with default options (of which there are presently none).
 type Formatter struct{}
