@@ -60,7 +60,7 @@ func (f Formatter) indentItem(item parser.Item, w io.Writer, prefix string) erro
 		}
 		fmt.Fprint(w, prefix, t) // handles brackets
 		if t.Trailer != "" {
-			fmt.Fprint(w, "  ", t.Trailer)
+			fmt.Fprint(w, "  ", fixComment(t.Trailer))
 		}
 		fmt.Fprintln(w)
 
@@ -76,7 +76,7 @@ func (f Formatter) indentItem(item parser.Item, w io.Writer, prefix string) erro
 		}
 
 		if t.Value.Trailer != "" {
-			fmt.Fprint(w, "  ", t.Value.Trailer)
+			fmt.Fprint(w, "  ", fixComment(t.Value.Trailer))
 		}
 		fmt.Fprintln(w)
 
@@ -135,7 +135,7 @@ func (f Formatter) indentArray(array parser.Array, w io.Writer, prefix string) e
 			if v, ok := elt.(parser.Value); ok {
 				fmt.Fprint(w, ",")
 				if v.Trailer != "" {
-					fmt.Fprint(w, "  ", v.Trailer)
+					fmt.Fprint(w, "  ", fixComment(v.Trailer))
 				}
 			}
 			fmt.Fprintln(w)
