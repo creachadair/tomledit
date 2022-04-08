@@ -13,7 +13,7 @@ import (
 
 // SnakeToKebab transforms all the key names in doc from snake_case to
 // kebab-case. This transformation cannot fail.
-func SnakeToKebab() Transform {
+func SnakeToKebab() Func {
 	return func(_ context.Context, doc *tomledit.Document) error {
 		doc.Scan(func(key parser.Key, e *tomledit.Entry) bool {
 			if e.IsSection() && !e.IsGlobal() {
@@ -39,7 +39,7 @@ func snakeToKebabKey(key parser.Key) parser.Key {
 // Rename renames the section or mapping at oldKey to newKey, and reports
 // whether the rename was successful. The mapping is not moved within the
 // document, only its label is changed.
-func Rename(oldKey, newKey parser.Key) Transform {
+func Rename(oldKey, newKey parser.Key) Func {
 	return func(_ context.Context, doc *tomledit.Document) error {
 		found := doc.First(oldKey...)
 		if found == nil {
@@ -55,7 +55,7 @@ func Rename(oldKey, newKey parser.Key) Transform {
 
 // Remove removes the section or mapping at key, and reports whether the
 // removal was successful.
-func Remove(key parser.Key) Transform {
+func Remove(key parser.Key) Func {
 	return func(_ context.Context, doc *tomledit.Document) error {
 		tgt := doc.First(key...)
 		if tgt == nil {
@@ -68,7 +68,7 @@ func Remove(key parser.Key) Transform {
 
 // MoveKey moves the mapping at oldKey from its current location to be a child
 // of rootKey with the new name newKey. It reports whether the key was moved.
-func MoveKey(oldKey, rootKey, newKey parser.Key) Transform {
+func MoveKey(oldKey, rootKey, newKey parser.Key) Func {
 	return func(_ context.Context, doc *tomledit.Document) error {
 		src := doc.First(oldKey...)
 		if src == nil || !src.IsMapping() {
@@ -96,7 +96,7 @@ func MoveKey(oldKey, rootKey, newKey parser.Key) Transform {
 // EnsureKey ensures the given table contains a mapping for the given key,
 // adding kv if it it is not already present. It reports an error if the table
 // does not exist.
-func EnsureKey(table parser.Key, kv *parser.KeyValue) Transform {
+func EnsureKey(table parser.Key, kv *parser.KeyValue) Func {
 	return func(_ context.Context, doc *tomledit.Document) error {
 		tab := FindTable(doc, table...)
 		if tab == nil {

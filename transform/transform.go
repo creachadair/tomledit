@@ -13,17 +13,16 @@ import (
 )
 
 // An Applier applies one or more transformations to a document.
-// The Transform, Step, and Plan types implement this interface.
+// The Func, Step, and Plan types implement this interface.
 type Applier interface {
 	Apply(context.Context, *tomledit.Document) error
 }
 
-// A Transform performs an arbitrary transformation on a document and reports
-// whether the transformation was successful.
-type Transform func(context.Context, *tomledit.Document) error
+// A Func implements the applier interface with a function.
+type Func func(context.Context, *tomledit.Document) error
 
-// Apply applies t to doc. It is syntactic sugar for calling the function.
-func (t Transform) Apply(ctx context.Context, doc *tomledit.Document) error { return t(ctx, doc) }
+// Apply applies f to doc, satisfying the Applier interface.
+func (f Func) Apply(ctx context.Context, doc *tomledit.Document) error { return f(ctx, doc) }
 
 // A Step is a single transformation in a plan.
 type Step struct {
