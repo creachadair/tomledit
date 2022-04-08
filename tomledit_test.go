@@ -203,6 +203,26 @@ great_balls_of = "fire"
 			T:    transform.SnakeToKebab(),
 		},
 		{
+			Desc: "Ensure absent key is present",
+			T: transform.EnsureKey(
+				parser.Key{"alpha-bravo"},
+				&parser.KeyValue{
+					Name:  parser.Key{"new", "item"},
+					Value: parser.MustValue("true").WithComment("A new value"),
+				},
+			),
+		},
+		{
+			Desc: "Ensure present key is not replaced",
+			T: transform.EnsureKey(
+				parser.Key{"alpha-bravo"},
+				&parser.KeyValue{
+					Name:  parser.Key{"foxtrot"},
+					Value: parser.MustValue(`"xyzzy"`),
+				},
+			),
+		},
+		{
 			Desc: "Rename section",
 			T: transform.Rename(
 				parser.Key{"alpha-bravo"},
