@@ -92,3 +92,24 @@ func MoveKey(oldKey, rootKey, newKey parser.Key) Transform {
 		return nil
 	}
 }
+
+// EnsureKey ensures the given table contains a mapping for the given key,
+// adding kv if it it is not already present. It reports an error if the table
+// does not exist.
+func EnsureKey(table parser.Key, kv *parser.KeyValue) Transform {
+	return func(_ context.Context, doc *tomledit.Document) error {
+		tab := FindTable(doc, table...)
+		if tab == nil {
+			return fmt.Errorf("table %q not found", table)
+		}
+		for _, item := range tab.Items {
+			if cur, ok := item.(*parser.KeyValue); ok && cur.Name.Equals(kv.Name) {
+				return nil // already found
+			}
+		}
+
+		// Reaching here, the key was not already present.
+		tab.Items = append(tab.Items, kv)
+		return nil
+	}
+}
