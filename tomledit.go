@@ -114,7 +114,7 @@ func (d *Document) First(key ...string) *Entry {
 	return first
 }
 
-// Find returns a slice of all entries in dwith the given key, or nil.
+// Find returns a slice of all entries in d with the given key, or nil.
 func (d *Document) Find(key ...string) []*Entry {
 	want := parser.Key(key)
 
