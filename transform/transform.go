@@ -27,15 +27,15 @@ func (t Transform) Apply(ctx context.Context, doc *tomledit.Document) error { re
 
 // A Step is a single transformation in a plan.
 type Step struct {
-	Desc    string    // human-readable description (for logging)
-	T       Transform // the transformation itself
-	ErrorOK bool      // if true, ignore errors from evaluating T
+	Desc    string  // human-readable description (for logging)
+	T       Applier // the transformation itself
+	ErrorOK bool    // if true, ignore errors from evaluating T
 }
 
 // Apply applies the transformation step and reports its error. If ErrorOK is
 // true, a non-nil error from the transformation is ignored.
 func (s Step) Apply(ctx context.Context, doc *tomledit.Document) error {
-	err := s.T(ctx, doc)
+	err := s.T.Apply(ctx, doc)
 	if s.ErrorOK {
 		return nil
 	}
