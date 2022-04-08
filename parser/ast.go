@@ -149,6 +149,9 @@ func (Value) isArrayItem() {}
 
 func (v Value) String() string { return v.X.String() }
 
+// WithComment returns a copy of v with its trailer set to text.
+func (v Value) WithComment(text string) Value { v.Trailer = text; return v }
+
 // A Datum is the representation of a data value. The concrete type of a Datum
 // is one of Token, Array, or Inline.
 type Datum interface {
