@@ -94,10 +94,13 @@ func TestScan(t *testing.T) {
 		// must be updated if the test input changes.
 		want := []string{
 			"p", "p.q", "p.r",
+
 			"first.table", "first.table.a", "first.table.a.b", "first.table.a.c",
 			"first.table.fuss.budget", "first.table.fuss.budget.x",
 			"first.table.x", "first.table.y", "first.table.z", "first.table.list",
+
 			"second-table", "second-table.foo",
+
 			"p", "p.q", "p.r", "p.r.s.t", // first array element
 			"p", "p.q", // second array element
 		}
@@ -235,7 +238,7 @@ func TestTransform(t *testing.T) {
 # Topic of much discussion.
 [alpha_bravo]
 charlie_delta = 'echo'
-foxtrot = 0
+golf = 0
 whisky = { tango = false }
 
 [[x]]
@@ -272,7 +275,7 @@ white.rabbit=true
 			T: transform.EnsureKey(
 				parser.Key{"alpha-bravo"},
 				&parser.KeyValue{
-					Name:  parser.Key{"foxtrot"},
+					Name:  parser.Key{"golf"},
 					Value: parser.MustValue(`"xyzzy"`),
 				},
 			),
@@ -324,4 +327,52 @@ white.rabbit=true
 		t.Fatalf("Plan failed: %v", err)
 	}
 	mustFormat(t, doc, "(after transformation)")
+
+	// Check that the transformations did what they were supposed to.
+	t.Run("CheckKeyCase", func(t *testing.T) {
+		doc.Scan(func(full parser.Key, e *tomledit.Entry) bool {
+			got := full.String()
+			if strings.Contains(got, "_") {
+				t.Errorf("Key %q contains underscores (%v)", got, e)
+			}
+			return true
+		})
+	})
+	t.Run("CheckAdded", func(t *testing.T) {
+		want := parser.Key{"charlie", "fox trot", "new", "item"}
+		if doc.First(want...) == nil {
+			t.Errorf("Key %q not found", want)
+		}
+	})
+	t.Run("CheckUnchanged", func(t *testing.T) {
+		key := parser.Key{"charlie", "fox trot", "golf"}
+		const want = `0`
+		if got := doc.First(key...); got == nil {
+			t.Fatalf("Key %#q not found", key)
+		} else if v := got.Value.X.String(); v != want {
+			t.Errorf("Key %#q value: got %q, want %q", key, v, want)
+		}
+	})
+	t.Run("CheckMoved", func(t *testing.T) {
+		old := parser.Key{"stale", "great-balls-of"}
+		if e := doc.First(old...); e != nil {
+			t.Errorf("Unexpectedly found: %v", e)
+		}
+		key := parser.Key{"non-empty", "horking-great-balls-of"}
+		const want = `"fire"`
+		if e := doc.First(key...); e == nil {
+			t.Fatalf("Key %#q not found", key)
+		} else if v := e.Value.X.String(); v != want {
+			t.Errorf("Key %#q value: got %#q, want %#q", key, v, want)
+		}
+	})
+	t.Run("CheckOrder", func(t *testing.T) {
+		for i := 0; i < len(doc.Sections)-1; i++ {
+			this := doc.Sections[i].Name.String()
+			next := doc.Sections[i+1].Name.String()
+			if this > next {
+				t.Errorf("Order violation at %d: %#q > %#q", i, this, next)
+			}
+		}
+	})
 }
