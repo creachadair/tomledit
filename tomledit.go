@@ -131,19 +131,21 @@ func (d *Document) Find(key ...string) []*Entry {
 // Scan calls f for every key-value pair defined in d, in lexical order.
 // The arguments to f are the complete key of the item and the entry.
 // Traversal continues until all items have been visited or f returns false.
+// Scan reports whether the traversal was stopped early.
 //
 // Editing the contents of existing sections and mappings is safe.  It is not
 // safe to remove or reorder sections or mappings during a scan.
-func (d *Document) Scan(f func(parser.Key, *Entry) bool) {
+func (d *Document) Scan(f func(parser.Key, *Entry) bool) bool {
 	if !d.Global.scan(d, f) {
-		return
+		return false
 	}
 
 	for _, s := range d.Sections {
 		if !s.scan(d, f) {
-			return
+			return false
 		}
 	}
+	return true
 }
 
 // A Section represents a section of a TOML document.  A section represents a
@@ -159,23 +161,39 @@ type Section struct {
 	Items []parser.Item
 }
 
-// scan traverses the contents of s. The first entry reported will be for the
-// section itself, the rest are for any contents of the section.
-func (s *Section) scan(doc *Document, f func(parser.Key, *Entry) bool) bool {
-	if s == nil {
-		return true // nothing to do
+func (s *Section) baseKey() parser.Key {
+	if s == nil || s.Heading == nil {
+		return nil
 	}
+	return s.Heading.Name
+}
 
+// scan the contents of a section attached to a document, including the section
+// itself as the first entry if it has a name.
+func (s *Section) scan(doc *Document, f func(parser.Key, *Entry) bool) bool {
 	// Report the section alone, if it has a heading.
-	var base parser.Key
-	if s.Heading != nil {
-		base = s.Name
+	if base := s.baseKey(); base != nil {
 		if !f(base, &Entry{Section: s, parent: &doc.Sections}) {
 			return false
 		}
 	}
+	return s.Scan(f)
+}
+
+// Scan calls f for every key-value pair defined inside s, not including s
+// itself, in lexical order.  The arguments to f are the complete key of the
+// item and the entry.  Traversal continues until all items have been visited
+// or f returns false.  Scan reports whether the traversal was stopped early.
+//
+// Editing the contents of existing mappings is safe.  It is not safe to remove
+// or reorder items during a scan.
+func (s *Section) Scan(f func(parser.Key, *Entry) bool) bool {
+	if s == nil {
+		return true // nothing to do
+	}
 
 	// Scan the contents of the section.
+	base := s.baseKey()
 	for _, item := range s.Items {
 		kv, ok := item.(*parser.KeyValue)
 		if !ok {
