@@ -36,8 +36,10 @@ type Heading struct {
 
 func (Heading) isItem() {}
 
-func (h Heading) String() string {
-	if h.IsArray {
+func (h *Heading) String() string {
+	if h == nil {
+		return "(empty)"
+	} else if h.IsArray {
 		return fmt.Sprintf("[[%s]]", h.Name)
 	}
 	return fmt.Sprintf("[%s]", h.Name)
@@ -52,7 +54,10 @@ type KeyValue struct {
 
 func (KeyValue) isItem() {}
 
-func (kv KeyValue) String() string {
+func (kv *KeyValue) String() string {
+	if kv == nil {
+		return ""
+	}
 	return fmt.Sprintf("%s = %s", kv.Name, kv.Value)
 }
 
