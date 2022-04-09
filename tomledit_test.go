@@ -3,6 +3,7 @@
 package tomledit_test
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"os"
@@ -125,55 +126,112 @@ func TestScan(t *testing.T) {
 }
 
 func TestEdit(t *testing.T) {
-	doc := mustParse(t, testDoc)
-	mustFormat(t, doc, "(original document)")
-
-	// Edit some values.
-	doc.First("first", "table", "z").Value.X = parser.Array(nil)
-
-	// Remove all the top-level keys.
-	doc.Global = nil
-
-	// Remove an inline table entry.
-	doc.First("first", "table", "a", "c").Remove()
-
-	mustFormat(t, doc, "(round 1)")
-
-	// Move the first section to the end.
-	doc.Sections = append(doc.Sections[1:], doc.Sections[0])
-
-	// Remove a section by name.
-	doc.First("first", "table").Remove()
-
-	// Delete some matching keys.
-	found := doc.Find("p")
-	if len(found) == 0 {
-		t.Fatal("No entries matching p")
-	}
-	t.Logf("Deleting %d entries matching p", len(found))
-	for _, elt := range found {
-		if !elt.Remove() {
-			t.Errorf("Remove %q failed", elt)
-		}
-		// Verify that deleting a second time does not succeed
-		if elt.Remove() {
-			t.Errorf("Remove %q succeeded twice", elt)
-		}
-	}
-
-	// Add a mapping to the last section.
-	v := parser.MustValue(`"fenchurch street station"`)
-	s := doc.Sections[len(doc.Sections)-1]
-	s.Items = append(s.Items, &parser.KeyValue{
-		Block: parser.Comments{
-			"An additional item added programmatically.",
-			"Don't let it go to your head",
+	tests := []struct {
+		desc, input string
+		want        string
+		edit        func(*tomledit.Document)
+	}{
+		{
+			desc:  "replace global",
+			input: "key = {'x.y' = 0}",
+			want:  "key = []",
+			edit: func(doc *tomledit.Document) {
+				doc.First("key").Value.X = parser.Array(nil)
+			},
 		},
-		Name:  parser.Key{"left", "luggage", "office"},
-		Value: v,
-	}, parser.Comments{"# A final wave goodbye"})
+		{
+			desc:  "replace inline",
+			input: "key={x=true}",
+			want:  "key = {x = [1]}",
+			edit: func(doc *tomledit.Document) {
+				doc.First("key", "x").Value = parser.MustValue(`[1]`)
+			},
+		},
+		{
+			desc:  "remove global",
+			input: "x=5\ny=10\n[z]\nok=true",
+			want:  "[z]\nok = true",
+			edit: func(doc *tomledit.Document) {
+				doc.Global = nil
+			},
+		},
+		{
+			desc:  "remove inline",
+			input: "[top]\nx={a=1,c=2}\n",
+			want:  "[top]\nx = {a = 1}",
+			edit: func(doc *tomledit.Document) {
+				doc.First("top", "x", "c").Remove()
+			},
+		},
+		{
+			desc:  "remove section",
+			input: "# A\n[a]\na=true\n\n# B\n[b]\nb=false\n[c]\nc=true",
+			want:  "# A\n[a]\na = true\n\n[c]\nc = true",
+			edit: func(doc *tomledit.Document) {
+				doc.First("b").Remove()
+			},
+		},
+		{
+			desc:  "permute sections",
+			input: "# A\n[a]\na=true\n\n# B\n[b]\nb=true\n",
+			want:  "# B\n[b]\nb = true\n\n# A\n[a]\na = true",
+			edit: func(doc *tomledit.Document) {
+				doc.Sections = append(doc.Sections[1:], doc.Sections[0])
+			},
+		},
+		{
+			desc:  "insert global mapping",
+			input: "x=0",
+			want:  "x = 0\ny = 19  # OK",
+			edit: func(doc *tomledit.Document) {
+				doc.Global.Items = append(doc.Global.Items, &parser.KeyValue{
+					Name:  parser.Key{"y"},
+					Value: parser.MustValue(`19 # OK`),
+				})
+			},
+		},
+		{
+			desc:  "insert table mapping",
+			input: "[x]\ny=5",
+			want:  "[x]\ny = 5\nz = [36, 24, 36]  # only if she's 5'3\"",
+			edit: func(doc *tomledit.Document) {
+				tab := doc.Sections[0]
+				tab.Items = append(tab.Items, &parser.KeyValue{
+					Name:  parser.Key{"z"},
+					Value: parser.MustValue(`[36,24,36]# only if she's 5'3"`),
+				})
+			},
+		},
+		{
+			desc:  "insert inline mapping",
+			input: "x={a=0}",
+			want:  "x = {a = 0, b = 'apples'}",
+			edit: func(doc *tomledit.Document) {
+				kv := doc.First("x").KeyValue
+				tab := kv.Value.X.(parser.Inline)
+				tab = append(tab, &parser.KeyValue{
+					Name:  parser.Key{"b"},
+					Value: parser.MustValue(`'apples'`),
+				})
+				kv.Value.X = tab
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.desc, func(t *testing.T) {
+			doc := mustParse(t, test.input)
+			test.edit(doc)
 
-	mustFormat(t, doc, "(round 2)")
+			var buf bytes.Buffer
+			if err := tomledit.Format(&buf, doc); err != nil {
+				t.Fatalf("Format: %v", err)
+			}
+			got := strings.TrimSpace(buf.String())
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("Wrong output: (-want, +got)\n%s", diff)
+			}
+		})
+	}
 }
 
 func TestData(t *testing.T) {
