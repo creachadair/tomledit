@@ -46,17 +46,14 @@ const testDoc = `
 
 # top-level mapping
 p = { q = [], r = {}}
-
 # bound
 [ first . table ]
   # Various spacing shenanigans.
   a = { b = 3, c = [4,5, # ppp
         6,
   ] } # qqq
-
   # Compound keys and values.
   fuss . budget = {x = true} # barbaric yawp
-
   x = 14  # hey what's up
   y = 'three'
 # A complex value.
@@ -65,22 +62,18 @@ z = [4, 5, # whatever
           'c' # hey 
         , 'd'], # foob
       6, 7] #hate
-
 list = [
-10, 20, 30, 40,
+10, 20, 30
+, 40,
 ]
-
 [second-table]
 foo = 'bar'
-
 # A repeated table array.
 [[p]]
 q = 1
 r = { s.t = 'u'} # v
-
 [[p]]
 q = 2
-
 # free comment again
 `
 
