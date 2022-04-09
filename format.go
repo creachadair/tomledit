@@ -38,9 +38,11 @@ func (f Formatter) Format(w io.Writer, doc *Document) error {
 
 func (f Formatter) indent(items []parser.Item, w io.Writer, prefix string) error {
 	for i, item := range items {
-		// If the current or previous item wants extra space, inject a newline
-		// prior to rendering the value.
-		if i > 0 && wantsBlank(item) {
+		// If the current item wants extra space, or the previous item was a
+		// block comment, inject a newline prior to rendering the value.  The
+		// second case is necessary so the block comment doesn't attach itself to
+		// the current item if we read the input back.
+		if i > 0 && (wantsBlank(item) || isComment(items[i-1])) {
 			fmt.Fprintln(w)
 		}
 		if err := f.indentItem(item, w, prefix); err != nil {
@@ -227,4 +229,9 @@ func wantsBlank(item parser.Item) bool {
 		return len(t.Block) != 0
 	}
 	return false
+}
+
+func isComment(item parser.Item) bool {
+	_, ok := item.(parser.Comments)
+	return ok
 }
