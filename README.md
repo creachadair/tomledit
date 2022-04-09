@@ -2,12 +2,12 @@
 
 [![GoDoc](https://img.shields.io/static/v1?label=godoc&message=reference&color=yellowgreen)](https://pkg.go.dev/github.com/creachadair/tomledit)
 
-This repository a Go library to parse and manipulate the syntactic structure of
-TOML documents. Unlike other TOML libraries, this one does not convert values
-into Go data structures (for that I recommend [github.com/BurntSushi/toml][toml]).
-However, it does preserve the complete structure of its input, including
-comments, allowing a TOML document to be read, manipulated, and written back
-out without loss.
+This repository defines a Go library to parse and manipulate the syntactic
+structure of TOML documents.  Unlike other TOML libraries, this one does not
+convert values into Go data structures (for that I recommend
+[github.com/BurntSushi/toml][toml]).  However, it does preserve the complete
+structure of its input, including comments, allowing a TOML document to be
+read, manipulated, and written back out without loss.
 
 This library is intended to implement the [TOML v1.0.0][spec] specification.
 
