@@ -122,7 +122,7 @@ type Value struct {
 func MustValue(s string) Value {
 	v, err := ParseValue(s)
 	if err != nil {
-		panic(fmt.Errorf("value parse failed; %w", err))
+		panic(fmt.Errorf("value parse failed: %w", err))
 	}
 	return v
 }
