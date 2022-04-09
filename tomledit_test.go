@@ -211,6 +211,14 @@ func TestEdit(t *testing.T) {
 				kv.Value.X = tab
 			},
 		},
+		{
+			desc:  "sort key-value items",
+			input: "# stay1\n\n# xc\nx=5\n# stay2\n\na=1\nm=3\n# rc\nr=4\na=2",
+			want:  "# stay1\n\na = 1\n\n# stay2\n\na = 2\nm = 3\n\n# rc\nr = 4\n\n# xc\nx = 5",
+			edit: func(doc *tomledit.Document) {
+				transform.SortKeyValuesByName(doc.Global.Items)
+			},
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.desc, func(t *testing.T) {
