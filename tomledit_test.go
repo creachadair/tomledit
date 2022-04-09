@@ -113,20 +113,14 @@ func TestScan(t *testing.T) {
 		}
 	})
 
-	t.Run("Filtered", func(t *testing.T) {
-		want := parser.Key{"p"}
-		var found []*tomledit.Entry
-		doc.Scan(func(key parser.Key, elt *tomledit.Entry) bool {
-			if elt.IsSection() && key.Equals(want) {
-				found = append(found, elt)
-			}
-			return true
-		})
+	t.Run("Find", func(t *testing.T) {
+		const wantMatches = 3
 
-		t.Logf("Found %d matches for key %q", len(found), want)
-		for i, elt := range found {
-			t.Logf("[%d]: %v", i+1, elt)
+		found := doc.Find("p")
+		if len(found) != wantMatches {
+			t.Errorf("Find: got %d matches, want %d", len(found), wantMatches)
 		}
+		t.Logf("Matches: %v", found)
 	})
 }
 
