@@ -17,8 +17,7 @@ import (
 )
 
 var (
-	testInput = flag.String("input", "", "Test input file")
-	doEmit    = flag.Bool("emit", false, "Emit formatted output to stdout")
+	doEmit = flag.Bool("emit", false, "Emit formatted output to stdout")
 )
 
 func mustParse(t *testing.T, s string) *tomledit.Document {
@@ -232,25 +231,6 @@ func TestEdit(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestData(t *testing.T) {
-	if *testInput == "" {
-		t.Skip("Skipping because -input file is not set")
-	}
-
-	f, err := os.Open(*testInput)
-	if err != nil {
-		t.Fatalf("Opening test input: %v", err)
-	}
-	defer f.Close()
-
-	doc, err := tomledit.Parse(f)
-	if err != nil {
-		t.Fatalf("Parsing failed: %v", err)
-	}
-
-	mustFormat(t, doc)
 }
 
 func TestTransform(t *testing.T) {
