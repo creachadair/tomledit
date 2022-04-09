@@ -26,7 +26,10 @@ func (f Formatter) Format(w io.Writer, doc *Document) error {
 	if doc.Global != nil {
 		all = append(all, doc.Global.Items...)
 	}
-	for _, s := range doc.Sections {
+	for i, s := range doc.Sections {
+		if s.Heading == nil || len(s.Heading.Name) == 0 {
+			return fmt.Errorf("section at offset %d has no heading", i)
+		}
 		all = append(all, s.Heading)
 		all = append(all, s.Items...)
 	}
