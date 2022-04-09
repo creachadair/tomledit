@@ -12,6 +12,7 @@ import (
 	"github.com/creachadair/tomledit"
 	"github.com/creachadair/tomledit/parser"
 	"github.com/creachadair/tomledit/transform"
+	"github.com/google/go-cmp/cmp"
 )
 
 var (
@@ -90,10 +91,26 @@ func TestFormat(t *testing.T) {
 func TestScan(t *testing.T) {
 	doc := mustParse(t, testDoc)
 	t.Run("All", func(t *testing.T) {
+		var keys []string
 		doc.Scan(func(key parser.Key, elt *tomledit.Entry) bool {
-			t.Logf("Key %q: %v", key, elt)
+			keys = append(keys, key.String())
 			return true
 		})
+
+		// All the keys defined in the test table, in definition order.  This
+		// must be updated if the test input changes.
+		want := []string{
+			"p", "p.q", "p.r",
+			"first.table", "first.table.a", "first.table.a.b", "first.table.a.c",
+			"first.table.fuss.budget", "first.table.fuss.budget.x",
+			"first.table.x", "first.table.y", "first.table.z", "first.table.list",
+			"second-table", "second-table.foo",
+			"p", "p.q", "p.r", "p.r.s.t", // first array element
+			"p", "p.q", // second array element
+		}
+		if diff := cmp.Diff(want, keys); diff != "" {
+			t.Errorf("Scan reported the wrong keys: (-want, +got)\n%s", diff)
+		}
 	})
 
 	t.Run("Filtered", func(t *testing.T) {
