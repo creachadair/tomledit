@@ -185,15 +185,28 @@ func TestData(t *testing.T) {
 }
 
 func TestTransform(t *testing.T) {
-	doc := mustParse(t, `[alpha_bravo]
+	doc := mustParse(t, `
+# Welcome
+
+[empty]
+
+# Topic of much discussion.
+[alpha_bravo]
 charlie_delta = 'echo'
 foxtrot = 0
 whisky = { tango = false }
 
-[empty]
+[[x]]
+a = 1
+
+[[x]]
+a = 2
 
 [stale]
 great_balls_of = "fire"
+
+[quite.late]
+white.rabbit=true
 `)
 	mustFormat(t, doc, "(original document)")
 
@@ -254,6 +267,13 @@ great_balls_of = "fire"
 		{
 			Desc: "Remove stale section",
 			T:    transform.Remove(parser.Key{"stale"}),
+		},
+		{
+			Desc: "Sort sections by name",
+			T: transform.Func(func(_ context.Context, doc *tomledit.Document) error {
+				transform.SortSectionsByName(doc.Sections)
+				return nil
+			}),
 		},
 	}
 	t.Log("Applying transformation plan...")
