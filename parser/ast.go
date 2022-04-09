@@ -84,6 +84,21 @@ func (k Key) Equals(k2 Key) bool {
 	return k.IsPrefixOf(k2) && len(k) == len(k2)
 }
 
+// Before reports whether k is lexicographically prior to k2.
+func (k Key) Before(k2 Key) bool {
+	i, j := 0, 0
+	for i < len(k) && j < len(k2) {
+		if k[i] < k2[j] {
+			return true
+		} else if k[i] > k2[j] {
+			return false
+		}
+		i++
+		j++
+	}
+	return i == len(k) && j < len(k2)
+}
+
 // IsPrefixOf reports whether k is a prefix of k2.
 func (k Key) IsPrefixOf(k2 Key) bool {
 	if len(k) > len(k2) {

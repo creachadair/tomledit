@@ -130,6 +130,47 @@ func TestParseKey(t *testing.T) {
 	})
 }
 
+func TestKeyCompare(t *testing.T) {
+	tests := []struct {
+		lhs, rhs   string
+		eq, before bool
+	}{
+		{"a", "a", true, false},
+		{"b", "a", false, false},
+		{"a", "b", false, true},
+
+		{"a.b", "a.b", true, false},
+		{"a.c", "a.b", false, false},
+		{"a.b", "a.c", false, true},
+
+		{"a.b.a", "a", false, false},
+		{"a.b.a", "a.c", false, true},
+		{"a.b.a", "a.c.a", false, true},
+		{"a.c.a", "a.b.a", false, false},
+
+		{"a.b.c.d", "a.b.c.e", false, true},
+		{"b.b.c.d", "a.b.c.e", false, false},
+		{"a.a.c.d", "a.b.c.e", false, true},
+		{"a.c.c.d", "a.b.c.e", false, false},
+	}
+	for i, test := range tests {
+		// Safety check on the test cases.
+		if test.eq && test.before {
+			t.Fatalf("Invalid test case %d: eq and before both true: %+v", i, test)
+		}
+
+		lhs := mustParseKey(t, test.lhs)
+		rhs := mustParseKey(t, test.rhs)
+
+		if got := lhs.Equals(rhs); got != test.eq {
+			t.Errorf("(%q).Equals(%q): got %v, want %v", lhs, rhs, got, test.eq)
+		}
+		if got := lhs.Before(rhs); got != test.before {
+			t.Errorf("(%q).Before(%q): got %v, want %v", lhs, rhs, got, test.before)
+		}
+	}
+}
+
 func TestParseValue(t *testing.T) {
 	tests := []struct {
 		input, want, comment string
@@ -159,4 +200,14 @@ func TestParseValue(t *testing.T) {
 			t.Errorf("ParseValue(%#q): got comment %q, want %q", test.input, v.Trailer, test.comment)
 		}
 	}
+}
+
+func mustParseKey(t *testing.T, s string) parser.Key {
+	t.Helper()
+
+	k, err := parser.ParseKey(s)
+	if err != nil {
+		t.Fatalf("ParseKey %q: %v", s, err)
+	}
+	return k
 }
