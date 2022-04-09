@@ -330,7 +330,7 @@ func parseSections(items []parser.Item) []*Section {
 	}
 
 	// Pick up any leftovers at the end of the input.
-	if cur+1 < len(items) {
+	if cur+1 <= len(items) {
 		sections[len(sections)-1].Items = copyItems(items[cur:])
 	}
 	return sections
