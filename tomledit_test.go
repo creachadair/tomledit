@@ -5,6 +5,7 @@ package tomledit_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"flag"
 	"os"
 	"strings"
@@ -328,10 +329,20 @@ white.rabbit=true
 				return nil
 			}),
 		},
+		{
+			Desc: "Sort key-value pairs by name",
+			T: transform.Func(func(_ context.Context, doc *tomledit.Document) error {
+				tab := transform.FindTable(doc, "charlie", "fox trot")
+				if tab == nil {
+					return errors.New("target table not found")
+				}
+				transform.SortKeyValuesByName(tab.Items)
+				return nil
+			}),
+		},
 	}
 	t.Log("Applying transformation plan...")
-	ctx := transform.WithLogWriter(context.Background(), os.Stderr)
-	if err := p.Apply(ctx, doc); err != nil {
+	if err := p.Apply(context.Background(), doc); err != nil {
 		t.Fatalf("Plan failed: %v", err)
 	}
 	mustFormat(t, doc, "(after transformation)")
@@ -374,12 +385,32 @@ white.rabbit=true
 			t.Errorf("Key %#q value: got %#q, want %#q", key, v, want)
 		}
 	})
-	t.Run("CheckOrder", func(t *testing.T) {
+	t.Run("CheckSectionOrder", func(t *testing.T) {
 		for i := 0; i < len(doc.Sections)-1; i++ {
 			this := doc.Sections[i].Name.String()
 			next := doc.Sections[i+1].Name.String()
 			if this > next {
 				t.Errorf("Order violation at %d: %#q > %#q", i, this, next)
+			}
+		}
+	})
+	t.Run("CheckKeyValueOrder", func(t *testing.T) {
+		key := parser.Key{"charlie", "fox trot"}
+		e := doc.First(key...)
+		if e == nil {
+			t.Fatalf("Key %q not found", key)
+		} else if !e.IsSection() {
+			t.Fatalf("Value for %q is not a section: %v", key, e)
+		}
+
+		var got []string
+		e.Scan(func(key parser.Key, _ *tomledit.Entry) bool {
+			got = append(got, key.String())
+			return true
+		})
+		for i := 0; i < len(got)-1; i++ {
+			if got[i] > got[i+1] {
+				t.Errorf("Order violation at %d: %#q > %#q", i, got[i], got[i+1])
 			}
 		}
 	})
