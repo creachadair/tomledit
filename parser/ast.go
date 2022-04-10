@@ -15,15 +15,54 @@ import (
 type Item interface{ isItem() }
 
 // Comments is an Item that represents a block of comments.  Each entry
-// represents a single comment line, including its comment marker but omitting
-// the trailing line break.
+// represents a single comment line.
+//
+// Comment lines parsed from a source file include the comment marker at the
+// beginning.  When constructing comments programmatically, the comment marker
+// is optional; one will be prepended if it does not exist.
 type Comments []string
 
 func (Comments) isItem()      {}
 func (Comments) isArrayItem() {}
 
 func (c Comments) String() string {
-	return strings.Join([]string(c), "\n")
+	return strings.Join(c.Clean(), "\n")
+}
+
+// Clean returns a copy of c in which each line has been "cleaned", removing
+// leading and trailing whitespace and prepending a "#" marker to each line
+// that does not already have one. If a line includes embedded newlines, it is
+// split into multiple lines, each of which is cleaned.
+func (c Comments) Clean() []string {
+	// Preallocate space for as many lines as original entries, but if there are
+	// embedded newlines this may expand beyond the original allocation.  Hence,
+	// the use of append here is intentional.
+	out := make([]string, 0, len(c))
+	for _, s := range c {
+		for _, line := range strings.Split(strings.TrimSpace(s), "\n") {
+			clean := strings.TrimSpace(line)
+			if clean == "" {
+				clean = "#" // skip trailing space
+			} else if !strings.HasPrefix(clean, "#") {
+				clean = "# " + clean
+			}
+			out = append(out, clean)
+		}
+	}
+	return out
+}
+
+// CleanTrailer returns a copy of s that is suitable for use as a line-ending
+// comment. It removes leading and trailing whitespace and prepends a "#"
+// marker if necessary.  If s contains newlines, they are converted to spaces.
+func CleanTrailer(s string) string {
+	clean := strings.ReplaceAll(strings.TrimSpace(s), "\n", " ")
+	if clean == "" {
+		return "#"
+	} else if !strings.HasPrefix(clean, "#") {
+		return "# " + clean
+	}
+	return clean
 }
 
 // Heading is an Item that represents a table section heading.
