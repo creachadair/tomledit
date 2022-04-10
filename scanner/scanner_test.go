@@ -115,3 +115,47 @@ frob = 2021-12-01
 		}
 	}
 }
+
+func TestEscape(t *testing.T) {
+	tests := []struct {
+		input, want string
+		multi       bool
+	}{
+		{"", "", false},
+		{"", "", true},
+		{"  ", "  ", false},
+		{"  ", "  ", true},
+		{" \t \r", " \\t \\r", false},
+		{" \t \r", " \\t \\r", true},
+
+		{"no escape", "no escape", false},
+		{"no escape", "no escape", true},
+
+		{"a\tb", "a\\tb", false},
+		{"a\tb", "a\\tb", true},
+		{"ab\n", "ab\\n", false},
+		{"ab\n", "ab\n", true},
+		{"a\\tb", "a\\\\tb", false},
+		{"a\\tb", "a\\\\tb", true},
+
+		{"\a\v\n\t", "\\u0007\\u000b\\n\\t", false},
+		{"\a\v\n\t", "\\u0007\\u000b\n\\t", true},
+
+		{"\ta\nb\nc", "\\ta\\nb\\nc", false},
+		{"\ta\nb\nc", "\\ta\nb\nc", true},
+
+		{"😍🐈\n", "😍🐈\\n", false},
+		{"😍🐈\n", "😍🐈\n", true},
+	}
+	for _, test := range tests {
+		var got string
+		if test.multi {
+			got = string(scanner.EscapeMultiline(test.input))
+		} else {
+			got = string(scanner.Escape(test.input))
+		}
+		if got != test.want {
+			t.Errorf("Escape %#q multi=%v: got %#q, want %#q", test.input, test.multi, got, test.want)
+		}
+	}
+}

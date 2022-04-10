@@ -32,12 +32,20 @@ func IsWord(s string) bool {
 }
 
 // Escape encodes a string to escape characters for a TOML basic string.
-// The result is not quoted, the caller must add quotation marks if needed.
-func Escape(src string) []byte {
+// The result is not quoted, the caller must add quotation marks.
+func Escape(src string) []byte { return escape(src, false) }
+
+// EscapeMultiline encodes a string to escape characters for a TOML multi-line
+// basic string. The result is not quoted, the caller must add quotation marks.
+func EscapeMultiline(src string) []byte { return escape(src, true) }
+
+func escape(src string, isMulti bool) []byte {
 	var buf bytes.Buffer
 	for _, r := range src {
 		if r < utf8.RuneSelf {
-			if r < ' ' {
+			if isMulti && r == '\n' {
+				// emit newlines literally in a multi-line string
+			} else if r < ' ' {
 				buf.WriteByte('\\')
 				if b := controlEsc[r]; b != 0 {
 					buf.WriteByte(b)
