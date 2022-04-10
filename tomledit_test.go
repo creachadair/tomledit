@@ -341,7 +341,7 @@ white.rabbit=true
 			}),
 		},
 	}
-	t.Log("Applying transformation plan...")
+	t.Logf("Applying transformation plan with %d steps", len(p))
 	if err := p.Apply(context.Background(), doc); err != nil {
 		t.Fatalf("Plan failed: %v", err)
 	}
