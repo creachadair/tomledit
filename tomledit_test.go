@@ -80,6 +80,36 @@ q = 2
 
 func TestFormat(t *testing.T) {
 	mustFormat(t, mustParse(t, testDoc))
+
+	t.Run("Comments", func(t *testing.T) {
+		// Check that synthesized comments are properly processed to handle
+		// internal newlines and comment markers.
+		doc := &tomledit.Document{
+			Global: &tomledit.Section{
+				Items: []parser.Item{
+					parser.Comments{`
+                   # This is a comment
+                   #    that spans multiple lines
+                   as you can see.
+                  `,
+						"#\n# end",
+					},
+				},
+			},
+		}
+		const want = "# This is a comment\n" + // a regular line
+			"#    that spans multiple lines\n" + // preserve indentation with "#"
+			"# as you can see.\n" + // add "#" if it is missing
+			"#\n" + // handle internal line breaks
+			"# end\n"
+		var buf bytes.Buffer
+		if err := tomledit.Format(&buf, doc); err != nil {
+			t.Fatalf("Formatting failed: %v", err)
+		}
+		if diff := cmp.Diff(want, buf.String()); diff != "" {
+			t.Errorf("Formatted output: (-want, +got)\n%s", diff)
+		}
+	})
 }
 
 func TestScan(t *testing.T) {
