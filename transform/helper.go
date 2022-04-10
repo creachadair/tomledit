@@ -53,13 +53,19 @@ func SortKeyValuesByName(items []parser.Item) {
 }
 
 // subseq implements sort.Interface to sort a subsequence of the elements of
-// the original slice. It builds mirror slices of the names and indices of the
-// items to be sorted in the original slice, then sorts these. When swapping
-// elements of the mirror slices, the corresponding elements of the original
-// are also swapped.
+// the original slice.
+//
+// To do this, it maintains a hash table of the offsets in the original slice
+// where the elements to be sorted are stored, then "sorts" the indices of the
+// hash table with comparison and swap functions that indirect through to the
+// underlying values.
+//
+// For efficiency, it also caches a positionally-mapped slice of the keys to be
+// sorted, to avoid the overhead of repeatedly loading and type-asserting the
+// original values out of their interface wrappers.
 type subseq struct {
 	orig []parser.Item // the original input slice
-	pos  []int         // offset in orig of the ith subsequence item
+	pos  []int         // pos[i] is the offset in orig of the ith subsequence item
 	name []parser.Key  // the key of the current ith subsequence item
 }
 
@@ -67,6 +73,9 @@ func (s subseq) Len() int           { return len(s.pos) }
 func (s subseq) Less(i, j int) bool { return s.name[i].Before(s.name[j]) }
 
 func (s subseq) Swap(i, j int) {
+	// N.B. we do not permute s.pos, because the offsets in the original
+	// sequence where the values are stored do not change, only the contents at
+	// those offsets.
 	oi, oj := s.pos[i], s.pos[j]
 	s.orig[oi], s.orig[oj] = s.orig[oj], s.orig[oi]
 	s.name[i], s.name[j] = s.name[j], s.name[i]
