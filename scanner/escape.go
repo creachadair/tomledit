@@ -112,6 +112,8 @@ func Unescape(src []byte) ([]byte, error) {
 		switch r {
 		case '"', '\\', '/':
 			dec.WriteByte(byte(r))
+		case '\n':
+			dec.WriteString("\\\n")
 		case 'b':
 			dec.WriteByte('\b')
 		case 'f':
