@@ -25,15 +25,8 @@ func FindTable(doc *tomledit.Document, name ...string) *tomledit.Entry {
 // sections by their name.
 func SortSectionsByName(ss []*tomledit.Section) {
 	sort.SliceStable(ss, func(i, j int) bool {
-		return nameOf(ss[i]).Before(nameOf(ss[j]))
+		return ss[i].TableName().Before(ss[j].TableName())
 	})
-}
-
-func nameOf(s *tomledit.Section) parser.Key {
-	if s.Heading == nil {
-		return nil
-	}
-	return s.Heading.Name
 }
 
 // SortKeyValuesByName performs a stable in-place sort of items, so that any

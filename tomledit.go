@@ -161,7 +161,12 @@ type Section struct {
 	Items []parser.Item
 }
 
-func (s *Section) baseKey() parser.Key {
+// IsGlobal reports whether s is a global (top-level) table.
+func (s *Section) IsGlobal() bool { return s != nil && s.Heading == nil }
+
+// TableName returns the name of the table defined by s, which is nil for a
+// global (top-level) table.
+func (s *Section) TableName() parser.Key {
 	if s == nil || s.Heading == nil {
 		return nil
 	}
@@ -172,8 +177,8 @@ func (s *Section) baseKey() parser.Key {
 // itself as the first entry if it has a name.
 func (s *Section) scan(doc *Document, f func(parser.Key, *Entry) bool) bool {
 	// Report the section alone, if it has a heading.
-	if base := s.baseKey(); base != nil {
-		if !f(base, &Entry{Section: s, parent: &doc.Sections}) {
+	if !s.IsGlobal() {
+		if !f(s.TableName(), &Entry{Section: s, parent: &doc.Sections}) {
 			return false
 		}
 	}
@@ -193,7 +198,7 @@ func (s *Section) Scan(f func(parser.Key, *Entry) bool) bool {
 	}
 
 	// Scan the contents of the section.
-	base := s.baseKey()
+	base := s.TableName()
 	for _, item := range s.Items {
 		kv, ok := item.(*parser.KeyValue)
 		if !ok {
@@ -300,9 +305,6 @@ func (e *Entry) Remove() bool {
 
 // IsSection reports whether e represents a section head.
 func (e Entry) IsSection() bool { return e.KeyValue == nil }
-
-// IsGlobal reports whether e represents the global section.
-func (e Entry) IsGlobal() bool { return e.IsSection() && e.Section.Heading == nil }
 
 // IsMapping reports whether e represents a key-value mapping.
 func (e Entry) IsMapping() bool { return e.KeyValue != nil }

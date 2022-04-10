@@ -17,7 +17,7 @@ func SnakeToKebab() Func {
 	return func(_ context.Context, doc *tomledit.Document) error {
 		doc.Scan(func(key parser.Key, e *tomledit.Entry) bool {
 			if e.IsSection() && !e.IsGlobal() {
-				e.Heading.Name = snakeToKebabKey(e.Heading.Name)
+				e.Heading.Name = snakeToKebabKey(e.TableName())
 			}
 			if e.KeyValue != nil {
 				e.KeyValue.Name = snakeToKebabKey(e.KeyValue.Name)
