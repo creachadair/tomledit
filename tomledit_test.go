@@ -94,14 +94,17 @@ func TestScan(t *testing.T) {
 		// All the keys defined in the test table, in definition order.  This
 		// must be updated if the test input changes.
 		want := []string{
+			// Top-level mappings.
 			"p", "p.q", "p.r",
 
+			// Standard table sections.
 			"first.table", "first.table.a", "first.table.a.b", "first.table.a.c",
 			"first.table.fuss.budget", "first.table.fuss.budget.x",
 			"first.table.x", "first.table.y", "first.table.z", "first.table.list",
 
 			"second-table", "second-table.foo",
 
+			// Array tables.
 			"p", "p.q", "p.r", "p.r.s.t", // first array element
 			"p", "p.q", // second array element
 		}
