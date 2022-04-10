@@ -26,12 +26,12 @@ func (c Comments) String() string {
 	return strings.Join([]string(c), "\n")
 }
 
-// Heading is an Item that represents a table or array section heading.
+// Heading is an Item that represents a table section heading.
 type Heading struct {
 	Block   Comments // a block comment before the heading (empty if none)
 	Trailer string   // a trailing line comment after the heading (empty if none)
-	IsArray bool     // whether this is an array (true) or table (false)
-	Name    Key      // the name of the array
+	IsArray bool     // whether this table is part of a table array
+	Name    Key      // the name of the table
 }
 
 func (Heading) isItem() {}
