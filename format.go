@@ -55,8 +55,8 @@ func (f Formatter) indent(items []parser.Item, w io.Writer, prefix string) error
 func (f Formatter) indentItem(item parser.Item, w io.Writer, prefix string) error {
 	switch t := item.(type) {
 	case parser.Comments:
-		for _, line := range t {
-			fmt.Fprint(w, prefix, fixComment(line), "\n")
+		for _, line := range t.Clean() {
+			fmt.Fprint(w, prefix, line, "\n")
 		}
 
 	case *parser.Heading:
@@ -65,7 +65,7 @@ func (f Formatter) indentItem(item parser.Item, w io.Writer, prefix string) erro
 		}
 		fmt.Fprint(w, prefix, t) // handles brackets
 		if t.Trailer != "" {
-			fmt.Fprint(w, "  ", fixComment(t.Trailer))
+			fmt.Fprint(w, "  ", parser.CleanTrailer(t.Trailer))
 		}
 		fmt.Fprintln(w)
 
@@ -81,7 +81,7 @@ func (f Formatter) indentItem(item parser.Item, w io.Writer, prefix string) erro
 		}
 
 		if t.Value.Trailer != "" {
-			fmt.Fprint(w, "  ", fixComment(t.Value.Trailer))
+			fmt.Fprint(w, "  ", parser.CleanTrailer(t.Value.Trailer))
 		}
 		fmt.Fprintln(w)
 
@@ -95,8 +95,8 @@ func (f Formatter) indentItem(item parser.Item, w io.Writer, prefix string) erro
 func (f Formatter) indentArrayItem(item parser.ArrayItem, w io.Writer, prefix string) error {
 	switch t := item.(type) {
 	case parser.Comments:
-		for _, line := range t {
-			fmt.Fprint(w, prefix, fixComment(line), "\n")
+		for _, line := range t.Clean() {
+			fmt.Fprint(w, prefix, line, "\n")
 		}
 
 	case parser.Value:
@@ -140,7 +140,7 @@ func (f Formatter) indentArray(array parser.Array, w io.Writer, prefix string) e
 			if v, ok := elt.(parser.Value); ok {
 				fmt.Fprint(w, ",")
 				if v.Trailer != "" {
-					fmt.Fprint(w, "  ", fixComment(v.Trailer))
+					fmt.Fprint(w, "  ", parser.CleanTrailer(v.Trailer))
 				}
 			}
 			fmt.Fprintln(w)
@@ -180,14 +180,6 @@ func (f Formatter) indentInline(inline parser.Inline, w io.Writer, prefix string
 	}
 	fmt.Fprint(w, prefix, "}")
 	return nil
-}
-
-func fixComment(s string) string {
-	clean := strings.TrimSpace(s)
-	if strings.HasPrefix(clean, "#") {
-		return clean
-	}
-	return "# " + clean
 }
 
 func shouldIndentArray(array parser.Array) bool {
