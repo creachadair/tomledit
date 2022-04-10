@@ -44,9 +44,9 @@ func TestScanner(t *testing.T) {
 		{`"""foo\nbar"""`, []result{{scanner.MString, `"""foo\nbar"""`}}},
 		{`'''foo'''`, []result{{scanner.MLString, `'''foo'''`}}},
 		{`"""\
-I am a man of
+I am a man of \
 constant sorrow.
-"""`, []result{{scanner.MString, "\"\"\"\\\nI am a man of\nconstant sorrow.\n\"\"\""}}},
+"""`, []result{{scanner.MString, "\"\"\"\\\nI am a man of \\\nconstant sorrow.\n\"\"\""}}},
 		{"'''\nI've seen trouble\nall my days.\n\n'''", []result{
 			{scanner.MLString, "'''\nI've seen trouble\nall my days.\n\n'''"},
 		}},
