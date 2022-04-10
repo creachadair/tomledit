@@ -159,3 +159,52 @@ func TestEscape(t *testing.T) {
 		}
 	}
 }
+
+func TestUnescape(t *testing.T) {
+	tests := []struct {
+		input, want string
+	}{
+		{"", ""},
+		{"Nothing here need be done", "Nothing here need be done"},
+
+		{`a \t\r\nb \u0009`, "a \t\r\nb \t"}, // escaped whitespace
+		{`a \u0007 b`, "a \a b"},             // escaped control
+		{`a \"b\" c`, `a "b" c`},             // escaped quotes
+		{`\u0113`, "\u0113"},                 // short Unicode escape
+		{`\U0001F60D`, "\U0001f60d"},         // long Unicode escape
+		{"a \\\nb c", "a \\\nb c"},           // newline at EOL
+	}
+	for _, test := range tests {
+		bits, err := scanner.Unescape([]byte(test.input))
+		if err != nil {
+			t.Errorf("Unescape %#q: %v", test.input, err)
+			continue
+		}
+
+		if got := string(bits); got != test.want {
+			t.Errorf("Unescape %#q: got %#q, want %#q", test.input, got, test.want)
+		}
+	}
+}
+
+func TestUnescapeErrors(t *testing.T) {
+	const badEscape = "incomplete escape sequence"
+	const badUnicode = "incomplete Unicode escape"
+	tests := []struct {
+		input, want string
+	}{
+		{`\`, badEscape},
+		{`a b c\`, badEscape},
+		{`\uXY`, badUnicode},
+		{`\u01x`, badUnicode},
+		{`\U`, badUnicode},
+		{`\U0113`, badUnicode},
+		{`\U01132fc`, badUnicode},
+	}
+	for _, test := range tests {
+		got, err := scanner.Unescape([]byte(test.input))
+		if err == nil || !strings.Contains(err.Error(), test.want) {
+			t.Errorf("Unescape %#q: got (%q, %v), wanted %v", test.input, string(got), err, test.want)
+		}
+	}
+}
