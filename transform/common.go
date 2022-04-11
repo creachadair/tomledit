@@ -53,15 +53,19 @@ func Rename(oldKey, newKey parser.Key) Func {
 	}
 }
 
-// Remove removes the section or mapping at key, and reports whether the
-// removal was successful.
-func Remove(key parser.Key) Func {
+// Remove removes the section or mapping at the given keys, and reports whether
+// the removals were successful. All the removals are attempted before returning.
+func Remove(key parser.Key, more ...parser.Key) Func {
 	return func(_ context.Context, doc *tomledit.Document) error {
-		tgt := doc.First(key...)
-		if tgt == nil {
-			return fmt.Errorf("key %q not found", key)
+		var notRemoved []string
+		for _, rem := range append([]parser.Key{key}, more...) {
+			if !doc.First(rem...).Remove() {
+				notRemoved = append(notRemoved, rem.String())
+			}
 		}
-		tgt.Remove()
+		if len(notRemoved) != 0 {
+			return fmt.Errorf("not found: %q", notRemoved)
+		}
 		return nil
 	}
 }
