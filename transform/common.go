@@ -102,21 +102,7 @@ func EnsureKey(table parser.Key, kv *parser.KeyValue) Func {
 		if tab == nil {
 			return fmt.Errorf("table %q not found", table)
 		}
-		for _, item := range tab.Items {
-			if cur, ok := item.(*parser.KeyValue); ok && cur.Name.Equals(kv.Name) {
-				return nil // already found
-			}
-		}
-
-		// Reaching here, the key was not already present. Add it to the end, and
-		// push it back before any block comments at the end of the section.
-		tab.Items = append(tab.Items, kv)
-		for i := len(tab.Items) - 1; i > 0; i-- {
-			if _, ok := tab.Items[i-1].(parser.Comments); !ok {
-				break
-			}
-			tab.Items[i], tab.Items[i-1] = tab.Items[i-1], tab.Items[i]
-		}
+		InsertMapping(tab.Section, kv, false)
 		return nil
 	}
 }

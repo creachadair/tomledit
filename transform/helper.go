@@ -27,6 +27,33 @@ func FindTable(doc *tomledit.Document, name ...string) *tomledit.Entry {
 	return nil
 }
 
+// InsertMapping inserts the specified key-value mapping into the given table.
+// If replace is true, the new value replaces an existing one with that name,
+// otherwise the original value is retained. The function reports true if kv
+// was inserted or replaced an existing value, otherwise false.
+func InsertMapping(tab *tomledit.Section, kv *parser.KeyValue, replace bool) bool {
+	for _, item := range tab.Items {
+		if cur, ok := item.(*parser.KeyValue); ok && cur.Name.Equals(kv.Name) {
+			if !replace {
+				return false // already present
+			}
+			*cur = *kv
+			return true
+		}
+	}
+
+	// Reaching here, the key was not already present. Add it to the end, and
+	// push it back before any block comments at the end of the section.
+	tab.Items = append(tab.Items, kv)
+	for i := len(tab.Items) - 1; i > 0; i-- {
+		if _, ok := tab.Items[i-1].(parser.Comments); !ok {
+			break
+		}
+		tab.Items[i], tab.Items[i-1] = tab.Items[i-1], tab.Items[i]
+	}
+	return true
+}
+
 // SortSectionsByName performs a stable in-place sort of the given slice of
 // sections by their name.
 func SortSectionsByName(ss []*tomledit.Section) {
