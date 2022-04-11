@@ -108,8 +108,15 @@ func EnsureKey(table parser.Key, kv *parser.KeyValue) Func {
 			}
 		}
 
-		// Reaching here, the key was not already present.
+		// Reaching here, the key was not already present. Add it to the end, and
+		// push it back before any block comments at the end of the section.
 		tab.Items = append(tab.Items, kv)
+		for i := len(tab.Items) - 1; i > 0; i-- {
+			if _, ok := tab.Items[i-1].(parser.Comments); !ok {
+				break
+			}
+			tab.Items[i], tab.Items[i-1] = tab.Items[i-1], tab.Items[i]
+		}
 		return nil
 	}
 }
