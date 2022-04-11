@@ -292,6 +292,8 @@ charlie_delta = 'echo'
 golf = 0
 whisky = { tango = false }
 
+# some crud at the end
+
 [[x]]
 a = 1
 
