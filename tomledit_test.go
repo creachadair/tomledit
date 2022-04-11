@@ -152,6 +152,15 @@ func TestScan(t *testing.T) {
 		}
 		t.Logf("Matches: %v", found)
 	})
+
+	t.Run("FindGlobal", func(t *testing.T) {
+		found := transform.FindTable(doc)
+		if found == nil {
+			t.Error("Global table not found")
+		} else if found.Section != doc.Global {
+			t.Errorf("Global table: got %v, want %v", found, doc.Global)
+		}
+	})
 }
 
 func TestEdit(t *testing.T) {
