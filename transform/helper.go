@@ -10,8 +10,14 @@ import (
 )
 
 // FindTable returns the entry the first table with the given name in doc, or
-// nil if no such table exists.
+// nil if no such table exists. An empty name denotes the global table.
 func FindTable(doc *tomledit.Document, name ...string) *tomledit.Entry {
+	if len(name) == 0 {
+		if doc.Global == nil {
+			return nil
+		}
+		return &tomledit.Entry{Section: doc.Global}
+	}
 	key := parser.Key(name)
 	for _, s := range doc.Sections {
 		if s.Name.Equals(key) {
