@@ -171,7 +171,7 @@ type Value struct {
 
 // MustValue parses s as a TOML value. It panics if parsing fails.  This is
 // intended for use at program initialization time, or for static string
-// constants that are expected to be always valid.  For all other casesl, use
+// constants that are expected to be always valid.  For all other cases, use
 // ParseValue to check the error.
 func MustValue(s string) Value {
 	v, err := ParseValue(s)
