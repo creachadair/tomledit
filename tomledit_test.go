@@ -161,6 +161,17 @@ func TestScan(t *testing.T) {
 			t.Errorf("Global table: got %v, want %v", found, doc.Global)
 		}
 	})
+
+	t.Run("FindRemovable", func(t *testing.T) {
+		tab := transform.FindTable(doc, "second-table")
+		if tab == nil {
+			t.Error("Table not found")
+		} else if !tab.Remove() {
+			t.Error("Table not removed")
+		} else if check := transform.FindTable(doc, "second-table"); check != nil {
+			t.Errorf("Removal did not work: found %v", check)
+		}
+	})
 }
 
 func TestEdit(t *testing.T) {

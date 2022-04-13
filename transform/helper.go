@@ -18,13 +18,16 @@ func FindTable(doc *tomledit.Document, name ...string) *tomledit.Entry {
 		}
 		return &tomledit.Entry{Section: doc.Global}
 	}
+	var found *tomledit.Entry
 	key := parser.Key(name)
-	for _, s := range doc.Sections {
-		if s.Name.Equals(key) {
-			return &tomledit.Entry{Section: s}
+	doc.Scan(func(cur parser.Key, e *tomledit.Entry) bool {
+		if e.IsSection() && cur.Equals(key) {
+			found = e
+			return false
 		}
-	}
-	return nil
+		return true
+	})
+	return found
 }
 
 // InsertMapping inserts the specified key-value mapping into the given table.
