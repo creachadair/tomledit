@@ -5,6 +5,7 @@ package tomledit_test
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/creachadair/tomledit"
@@ -55,4 +56,37 @@ bar . baz = "frob"
 	fmt.Println(doc.First("foo", "bar", "baz"))
 	// Output:
 	// [foo] :: bar.baz = "frob"
+}
+
+func ExampleFormatter() {
+	doc, err := tomledit.Parse(strings.NewReader(`# A
+b='c'
+[q."r"]
+# D
+e.f=true
+ g=false
+# h
+i={j=1,k=2} # L
+`))
+	if err != nil {
+		log.Fatalf("Parse: %v", err)
+	}
+
+	if err := tomledit.Format(os.Stdout, doc); err != nil {
+		log.Fatalf("Format: %v", err)
+	}
+	// Output:
+	//
+	// # A
+	// b = 'c'
+	//
+	// [q.r]
+	//
+	// # D
+	// e.f = true
+	// g = false
+	//
+	// # h
+	// i = {j = 1, k = 2}  # L
+	//
 }
