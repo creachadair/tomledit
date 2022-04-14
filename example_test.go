@@ -40,3 +40,19 @@ verbose=true
 	// commented.x
 	// commented.y
 }
+
+func ExampleDocument_First() {
+	doc, err := tomledit.Parse(strings.NewReader(`[foo]
+bar . baz = "frob"
+# end
+`))
+	if err != nil {
+		log.Fatalf("Parse: %v", err)
+	}
+
+	// Print the first item with the given key. The default string output for an
+	// item is for human consumption and is not valid TOML.
+	fmt.Println(doc.First("foo", "bar", "baz"))
+	// Output:
+	// [foo] :: bar.baz = "frob"
+}
