@@ -218,14 +218,47 @@ func (s *Scanner) scanLiteralString(open rune) error {
 		s.buf.WriteRune(ch)
 		if ch == open {
 			wantq--
-			if wantq == 0 {
+			if wantq > 0 {
+				continue
+			} else if nquotes == 1 {
 				s.tok = resType
 				return nil
 			}
+			return s.checkMultilineStringEnd(open, resType)
 		} else {
 			wantq = nquotes // non-quote: reset
 		}
 	}
+}
+
+// checkMultilineStringEnd checks whether there are additional quotation marks
+// beyond the apparent end of a multiline string.
+//
+// After we have seen enough quotes to close the string, we might be done, but
+// lexicall grammar allows up to 2 unhedged quotes at the end, so we have to
+// check further.  If there are 0, 1, or 2 additional quotes, all is well; any
+// more than that is an error.
+func (s *Scanner) checkMultilineStringEnd(open rune, resType Token) error {
+	var extra int
+
+	if _, err := s.readWhile(func(r rune) bool {
+		if r == open {
+			extra++
+			return true
+		}
+		return false
+	}); err == io.EOF {
+		// OK
+	} else if err != nil {
+		return err
+	} else {
+		s.unrune()
+	}
+	if extra >= 3 {
+		return s.failf("too many quotes (%d) at end of string", extra)
+	}
+	s.tok = resType
+	return nil
 }
 
 // isMultiline checks whether the input begins a multiline string.
@@ -287,8 +320,7 @@ func (s *Scanner) scanString(open rune) error {
 			if !esc {
 				wantq--
 				if wantq == 0 {
-					s.tok = resType
-					return nil
+					return s.checkMultilineStringEnd(open, resType)
 				}
 			}
 			esc = false
@@ -301,9 +333,11 @@ func (s *Scanner) scanString(open rune) error {
 		// token for the newline. If a newline is "escaped" we keep the trailing
 		// backslash that preceded it. Either way, however, we need to update the
 		// line numbering so subsequent tokens will get correct locations.
-		if nquotes > 1 && ch == '\n' {
-			s.eline++
-			s.ecol = 0
+		if nquotes > 1 && (ch == '\n' || ch == '\r') {
+			if ch == '\n' {
+				s.eline++
+				s.ecol = 0
+			}
 			esc = false // consume the escape we wrote out previously
 			s.buf.WriteRune(ch)
 			continue
@@ -312,7 +346,7 @@ func (s *Scanner) scanString(open rune) error {
 		if esc {
 			// We are awaiting the completion of a \-escape.
 			switch ch {
-			case '\\', '/', 'b', 'f', 'n', 'r', 't':
+			case '\\', '\t', ' ', '/', 'b', 'f', 'n', 'r', 't':
 				s.buf.WriteByte(byte(ch))
 			case 'u', 'U':
 				s.buf.WriteByte(byte(ch))
@@ -328,7 +362,7 @@ func (s *Scanner) scanString(open rune) error {
 				return s.failf("invalid %q after escape", ch)
 			}
 			esc = false
-		} else if ch < ' ' {
+		} else if isControl(ch) {
 			return s.failf("unescaped control %q", ch)
 		} else if ch > unicode.MaxRune {
 			return s.failf("invalid Unicode rune %q", ch)
@@ -545,6 +579,8 @@ func (s *Scanner) fail(err error) error {
 func (s *Scanner) failf(msg string, args ...interface{}) error {
 	return s.setErr(fmt.Errorf("offset %d: "+msg, append([]interface{}{s.end}, args...)...))
 }
+
+func isControl(ch rune) bool { return ch < ' ' && !isSpace(ch) }
 
 func isSpace(ch rune) bool {
 	return ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t'
