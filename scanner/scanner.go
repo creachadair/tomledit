@@ -372,6 +372,33 @@ func (s *Scanner) scanWord(first rune) error {
 		return s.scanDateTime(next)
 	}
 
+	// If the word so far looks like a datestamp (2006-01-02), it may be that.
+	// But if it is followed by a space, there may also be a timestamp after it.
+	// To tell, we have to look one rune further. Thanks, Tom.
+	if dateRE.Match(s.buf.Bytes()) {
+		if next != ' ' {
+			// The space is a delimiter, put it back.
+			s.unrune()
+			s.tok = LocalDate
+			return nil
+		}
+		ch, err := s.rune()
+		if err == io.EOF {
+			// Extra space at EOF, ignore it.
+			s.tok = LocalDate
+			return nil
+		} else if err != nil {
+			return err
+		} else if isDigit(ch) {
+			// The space is a separator, keep it.  At this point the token can
+			// ONLY be valid if it has a timestamp.
+			s.buf.WriteRune(next)
+			return s.scanDateTime(ch)
+		} else {
+			s.unrune()
+		}
+	}
+
 	// The lexical grammar of TOML is slightly context-sensitive: A dot (".")
 	// may be either a separator for words in a key, or a decimal point in a
 	// float or timestamp literal. To correctly distinguish these cases you must
@@ -450,15 +477,16 @@ func (s *Scanner) scanDateTime(next rune) error {
 }
 
 var (
-	intRE    = regexp.MustCompile(`^(0x[A-Fa-f0-9_]+|0o[0-7_]+|0b[01]+|[-+]?[0-9_]+)$`)
-	floatRE  = regexp.MustCompile(`^[-+]?([0-9_]+(\.[0-9]+)?(e[-+]?[0-9_]+)?)$`)
+	intRE    = regexp.MustCompile(`^(0x[A-Fa-f0-9_]+|0o[0-7_]+|0b[01_]+|[-+]?[0-9_]+)$`)
+	floatRE  = regexp.MustCompile(`^[-+]?([0-9_]+(\.[0-9_]+)?([eE][-+]?[0-9_]+)?)$`)
 	sfloatRE = regexp.MustCompile(`^[-+]?(inf|nan)$`)
 	timeRE   = regexp.MustCompile(`^\d{2}:\d{2}:\d{2}(\.\d+)?$`)
+	dateRE   = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 
 	// Date/time literals. Match 1 is date, match 2 is time, match 3 is offset.
 	// If offset is missing, it is a "local" date/time.
 	// If time is also missing it is a local date only.
-	dateRE = regexp.MustCompile(`^(\d{4}-\d{2}-\d{2})(T\d{2}:\d{2}:\d{2}(?:\.\d+)?(Z|[-+]\d{2}:\d{2})?)?$`)
+	dateTimeRE = regexp.MustCompile(`^(\d{4}-\d{2}-\d{2})([tT ]\d{2}:\d{2}:\d{2}(?:\.\d+)?([zZ]|[-+]\d{2}:\d{2})?)?$`)
 )
 
 func (s *Scanner) rune() (rune, error) {
@@ -557,7 +585,7 @@ func selfDelim(ch rune) (Token, bool) {
 func dateTimeToken(text []byte) Token {
 	if timeRE.Match(text) {
 		return LocalTime
-	} else if m := dateRE.FindSubmatch(text); m == nil {
+	} else if m := dateTimeRE.FindSubmatch(text); m == nil {
 		return Invalid
 	} else if len(m[3]) == 0 {
 		if len(m[2]) == 0 {

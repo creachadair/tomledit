@@ -64,17 +64,20 @@ constant sorrow.
 			{scanner.Word, "d"},
 		}},
 
+		{`1985-03-04 # ok`, []result{{scanner.LocalDate, "1985-03-04"}, {scanner.Comment, "# ok"}}},
+		{`1987-09-12`, []result{{scanner.LocalDate, "1987-09-12"}}},
+		{`1985-07-19qqq`, []result{{scanner.Word, "1985-07-19qqq"}}},
 		{`1999-12-31T23:59:59.99999Z 2000-01-01T00:00:00+01:00`, []result{
 			{scanner.DateTime, "1999-12-31T23:59:59.99999Z"},
 			{scanner.DateTime, "2000-01-01T00:00:00+01:00"},
 		}},
-		{`2020-11-02T18:30:01.9001 2021-01-06T17:25:00`, []result{
+		{`2020-11-02T18:30:01.9001 2021-01-06T17:25:00 2021-03-04t01:01:33`, []result{
 			{scanner.LocalDateTime, "2020-11-02T18:30:01.9001"},
 			{scanner.LocalDateTime, "2021-01-06T17:25:00"},
+			{scanner.LocalDateTime, "2021-03-04t01:01:33"},
 		}},
 		{`1985-07-26 15:23:04.155 01:01:05`, []result{
-			{scanner.LocalDate, "1985-07-26"},
-			{scanner.LocalTime, "15:23:04.155"},
+			{scanner.LocalDateTime, "1985-07-26 15:23:04.155"},
 			{scanner.LocalTime, "01:01:05"},
 		}},
 
