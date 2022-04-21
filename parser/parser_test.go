@@ -110,6 +110,81 @@ func TestItems(t *testing.T) {
 	}
 }
 
+const stdExample = `# This is a TOML document.
+
+title = "TOML Example"
+
+[owner]
+name = "Tom Preston-Werner"
+dob = 1979-05-27T07:32:00-08:00 # First class dates
+
+[database]
+server = "192.168.1.1"
+ports = [ 8000, 8001, 8002 ]
+connection_max = 5000
+enabled = true
+
+[servers]
+
+  # Indentation (tabs and/or spaces) is allowed but not required
+  [servers.alpha]
+  ip = "10.0.0.1"
+  dc = "eqdc10"
+
+  [servers.beta]
+  ip = "10.0.0.2"
+  dc = "eqdc10"
+
+[clients]
+data = [ ["gamma", "delta"], [1, 2] ]
+
+# Line breaks are OK when inside arrays
+hosts = [
+  "alpha",
+  "omega"
+]
+`
+
+func TestStandardExample(t *testing.T) {
+	items, err := parser.New(strings.NewReader(stdExample)).Items()
+	if err != nil {
+		t.Fatalf("Parsing standard example: unexpected error: %v", err)
+	}
+	var got []string
+	for _, item := range items {
+		typ := strings.Split(fmt.Sprintf("%T", item), ".")
+		got = append(got, fmt.Sprintf("%s %s", typ[len(typ)-1], item))
+	}
+	want := []string{
+		`Comments # This is a TOML document.`,
+		`KeyValue title = "TOML Example"`,
+		`Heading [owner]`,
+		`KeyValue name = "Tom Preston-Werner"`,
+		`KeyValue dob = 1979-05-27T07:32:00-08:00`,
+		`Heading [database]`,
+		`KeyValue server = "192.168.1.1"`,
+		`KeyValue ports = [8000, 8001, 8002]`,
+		`KeyValue connection_max = 5000`,
+		`KeyValue enabled = true`,
+		`Heading [servers]`,
+		// Comment attached to heading
+		`Heading [servers.alpha]`,
+		`KeyValue ip = "10.0.0.1"`,
+		`KeyValue dc = "eqdc10"`,
+		`Heading [servers.beta]`,
+		`KeyValue ip = "10.0.0.2"`,
+		`KeyValue dc = "eqdc10"`,
+		`Heading [clients]`,
+		`KeyValue data = [["gamma", "delta"], [1, 2]]`,
+		// Comment attached to key-value
+		`KeyValue hosts = ["alpha", "omega"]`,
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("Items: (-want, +got)\n%s", diff)
+		t.Logf("Input:\n%s", stdExample)
+	}
+}
+
 func TestParseKey(t *testing.T) {
 	t.Run("Good", func(t *testing.T) {
 		const input = ` a . "b.c d" . e`
