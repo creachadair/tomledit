@@ -59,7 +59,7 @@ func (p *Parser) parseItem() (Item, error) {
 			}
 			continue
 
-		case scanner.LTable, scanner.LArray:
+		case scanner.LBracket:
 			return p.parseHeading(p.sc.Token(), block)
 
 		case scanner.Word,
@@ -80,8 +80,14 @@ func (p *Parser) parseItem() (Item, error) {
 
 // parseHeading parses the heading of a table ("[name]") or table-array ("[[name]]").
 func (p *Parser) parseHeading(tok scanner.Token, comments []string) (*Heading, error) {
-	if _, err := p.require(); err != nil {
+	var isArray bool
+	if next, err := p.require(); err != nil {
 		return nil, err
+	} else if next == tok && p.sc.Prev() == tok { // recognize "[["
+		isArray = true
+		if _, err := p.advance(next); err != nil {
+			return nil, err
+		}
 	}
 	key, err := p.parseKey()
 	if err != nil {
@@ -89,14 +95,21 @@ func (p *Parser) parseHeading(tok scanner.Token, comments []string) (*Heading, e
 	}
 
 	// Check for the matching close brace.
-	next, err := p.advance(tok + 2)
+	next, err := p.advance(scanner.RBracket)
 	if err != nil && err != io.EOF {
 		return nil, err
+	}
+	if isArray { // require "]]"
+		if next != scanner.RBracket || p.sc.Prev() != next {
+			return nil, fmt.Errorf(`at %s: got %v, want "]]"`, p.sc.Location().First, next)
+		} else if _, err := p.advance(scanner.RBracket); err != nil && err != io.EOF {
+			return nil, err
+		}
 	}
 
 	hd := &Heading{
 		Block:   Comments(comments),
-		IsArray: tok == scanner.LArray,
+		IsArray: isArray,
 		Name:    key,
 	}
 
@@ -202,7 +215,7 @@ func (p *Parser) parseValue() (Value, error) {
 				p.sc.Location(), next, text)
 		}
 		datum = Token{Type: next, text: text}
-	} else if next == scanner.LTable {
+	} else if next == scanner.LBracket {
 		datum, err = p.parseArrayValue()
 	} else if next == scanner.LInline {
 		datum, err = p.parseInlineValue()
@@ -219,11 +232,6 @@ func (p *Parser) parseValue() (Value, error) {
 // parseArrayValue parses an inline array value on the right-hand side of a
 // key-value assignment. The starting token must be the opening "[".
 func (p *Parser) parseArrayValue() (Array, error) {
-	if got := p.sc.Token(); got != scanner.LTable {
-		return nil, fmt.Errorf("at %s: got %v, wanted %v",
-			p.sc.Location().First, got, scanner.LTable)
-	}
-
 	var block []string
 	var result Array
 	pop := func() {
@@ -241,7 +249,7 @@ func (p *Parser) parseArrayValue() (Array, error) {
 			return nil, err
 		}
 		switch next {
-		case scanner.RTable:
+		case scanner.RBracket:
 			pop()
 			return result, nil
 

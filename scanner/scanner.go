@@ -37,10 +37,8 @@ const (
 	LocalDate                  // local date (2006-01-02)
 	LocalTime                  // local time (15:04:05.999999999)
 	LocalDateTime              // local date-time (2006-01-02T15:04:05.999999999)
-	LTable                     // table open ("[")
-	LArray                     // array open ("[[")
-	RTable                     // table close ("]")
-	RArray                     // array close ("]]")
+	LBracket                   // left bracket ("[")
+	RBracket                   // right bracket ("]")
 	LInline                    // inline table open ("{")
 	RInline                    // inline table close ("}")
 	Equal                      // equal sign ("=")
@@ -70,10 +68,8 @@ var tokenStr = [...]string{
 	LocalDate:     "local date",
 	LocalTime:     "local time",
 	LocalDateTime: "local date-time",
-	LTable:        `"["`,
-	LArray:        `"[["`,
-	RTable:        `"]"`,
-	RArray:        `"]]"`,
+	LBracket:      `"["`,
+	RBracket:      `"]"`,
 	LInline:       `"{"`,
 	RInline:       `"}"`,
 	Equal:         `"="`,
@@ -92,10 +88,11 @@ func (t Token) String() string {
 // A Scanner reads lexical tokens from an input stream.  Each call to Next
 // advances the scanner to the next token, or reports an error.
 type Scanner struct {
-	r   *bufio.Reader
-	buf bytes.Buffer
-	tok Token
-	err error
+	r    *bufio.Reader
+	buf  bytes.Buffer
+	prev Token
+	tok  Token
+	err  error
 
 	pos, end int // start and end offsets of current token
 	last     int // size in bytes of last-read input rune
@@ -119,7 +116,7 @@ func New(r io.Reader) *Scanner {
 func (s *Scanner) Next() error {
 	s.buf.Reset()
 	s.err = nil
-	s.tok = Invalid
+	s.prev, s.tok = s.tok, Invalid
 	s.pos, s.pline, s.pcol = s.end, s.eline, s.ecol
 
 	for {
@@ -140,29 +137,14 @@ func (s *Scanner) Next() error {
 				s.tok = Newline
 				return nil
 			}
+			s.prev = Invalid // whitespace interrupts tokens
 			continue
 		}
 
-		// Handle punctuation (not including table/array brackets).
+		// Handle punctuation.
 		if t, ok := selfDelim(ch); ok {
 			s.buf.WriteRune(ch)
 			s.tok = t
-			return nil
-		}
-
-		// Handle table and array brackets.
-		if ch == '[' || ch == ']' {
-			s.buf.WriteRune(ch)
-			s.tok = LTable
-			if ch == ']' {
-				s.tok = RTable
-			}
-			ok, err := s.readIf(ch)
-			if err != nil {
-				return s.fail(err)
-			} else if ok {
-				s.tok++ // N.B. relies on token ordering
-			}
 			return nil
 		}
 
@@ -188,6 +170,10 @@ func (s *Scanner) Next() error {
 
 // Token returns the type of the current token.
 func (s *Scanner) Token() Token { return s.tok }
+
+// Prev returns the type of the immediately prior token, or Invalid.
+// Whitespace resets the previous token.
+func (s *Scanner) Prev() Token { return s.prev }
 
 // Err returns the last error reported by Next.
 func (s *Scanner) Err() error { return s.err }
@@ -490,22 +476,6 @@ func (s *Scanner) unrune() {
 	s.r.UnreadRune()
 }
 
-// readIf consumes a single rune r from the input and reports whether it was
-// found. If not, the next rune is unconsumed.
-func (s *Scanner) readIf(r rune) (bool, error) {
-	ch, err := s.rune()
-	if err == io.EOF {
-		return false, nil
-	} else if err != nil {
-		return false, err
-	} else if ch != r {
-		s.unrune()
-		return false, nil
-	}
-	s.buf.WriteRune(r)
-	return true, nil
-}
-
 // readWhile consumes runes matching f from the input until EOF or until a rune
 // not matching f is found. The first non-matching rune (if any) is returned.
 // It is the caller's responsibility to unread this rune, if desired.
@@ -569,10 +539,13 @@ func isHexDigit(ch rune) bool {
 	return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F')
 }
 
-var self = [...]Token{LInline, RInline, Equal, Comma, Dot}
+// N.B. The order of the probe string must match the order of the self slice.
+const selfText = "{}=,.[]"
+
+var self = [...]Token{LInline, RInline, Equal, Comma, Dot, LBracket, RBracket}
 
 func selfDelim(ch rune) (Token, bool) {
-	i := strings.IndexRune("{}=,.", ch) // N.B. not "[" or "]" because "[[" and "]]"
+	i := strings.IndexRune(selfText, ch)
 	if i >= 0 {
 		return self[i], true
 	}

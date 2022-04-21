@@ -52,8 +52,8 @@ constant sorrow.
 		}},
 
 		{`[table] [[array]]`, []result{
-			{scanner.LTable, "["}, {scanner.Word, "table"}, {scanner.RTable, "]"},
-			{scanner.LArray, "[["}, {scanner.Word, "array"}, {scanner.RArray, "]]"},
+			{scanner.LBracket, "["}, {scanner.Word, "table"}, {scanner.RBracket, "]"},
+			{scanner.LBracket, "["}, {scanner.LBracket, "["}, {scanner.Word, "array"}, {scanner.RBracket, "]"}, {scanner.RBracket, "]"},
 		}},
 
 		{`a."b c".d`, []result{
@@ -82,8 +82,8 @@ constant sorrow.
 baz = "quux"
 frob = 2021-12-01
 `, []result{
-			{scanner.LTable, "["}, {scanner.Word, "foo"}, {scanner.Dot, "."},
-			{scanner.String, `"bar"`}, {scanner.RTable, "]"}, {scanner.Newline, ""},
+			{scanner.LBracket, "["}, {scanner.Word, "foo"}, {scanner.Dot, "."},
+			{scanner.String, `"bar"`}, {scanner.RBracket, "]"}, {scanner.Newline, ""},
 			{scanner.Word, "baz"}, {scanner.Equal, "="}, {scanner.String, `"quux"`}, {scanner.Newline, ""},
 			{scanner.Word, "frob"}, {scanner.Equal, "="}, {scanner.LocalDate, "2021-12-01"}, {scanner.Newline, ""},
 		}},

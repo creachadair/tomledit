@@ -63,6 +63,8 @@ func TestItems(t *testing.T) {
 		{"x=[]", []result{{keyValueType, `x = []`}}},
 		{"x=[\n5,\n\"c\",\n]\n", []result{{keyValueType, `x = [5, "c"]`}}},
 		{"x = [\n# ignored\n1,2,3\n# ignored\n, ]\n", []result{{keyValueType, `x = [1, 2, 3]`}}},
+		{"x = [[]] # array in array", []result{{keyValueType, `x = [[]]`}}},
+		{"x = [[],[[[[],5 # ok\n]],[]],] # array in array", []result{{keyValueType, `x = [[], [[[[], 5]], []]]`}}},
 
 		// - Inline tables.
 		{"x={} # whatever, bro\n", []result{{keyValueType, `x = {}`}}},
