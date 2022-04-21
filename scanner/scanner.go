@@ -150,7 +150,7 @@ func (s *Scanner) Next() error {
 
 		// Handle string and literal string values.
 		if ch == '"' {
-			return s.scanString(ch)
+			return s.scanBasicString(ch)
 		} else if ch == '\'' {
 			return s.scanLiteralString(ch)
 		}
@@ -214,6 +214,8 @@ func (s *Scanner) scanLiteralString(open rune) error {
 		ch, err := s.rune()
 		if err != nil {
 			return s.fail(err)
+		} else if isControl(ch) && !isSpace(ch) {
+			return s.failf("invalid control %q", ch)
 		}
 		s.buf.WriteRune(ch)
 		if ch == open {
@@ -295,7 +297,7 @@ func (s *Scanner) isMultiline(open rune) (empty bool, nquotes int, _ error) {
 	return false, 3, nil
 }
 
-func (s *Scanner) scanString(open rune) error {
+func (s *Scanner) scanBasicString(open rune) error {
 	isEmpty, nquotes, err := s.isMultiline(open)
 	if err != nil {
 		return err
@@ -346,7 +348,7 @@ func (s *Scanner) scanString(open rune) error {
 		if esc {
 			// We are awaiting the completion of a \-escape.
 			switch ch {
-			case '\\', '\t', ' ', '/', 'b', 'f', 'n', 'r', 't':
+			case '\\', '\t', ' ', 'b', 'f', 'n', 'r', 't':
 				s.buf.WriteByte(byte(ch))
 			case 'u', 'U':
 				s.buf.WriteByte(byte(ch))
@@ -362,10 +364,12 @@ func (s *Scanner) scanString(open rune) error {
 				return s.failf("invalid %q after escape", ch)
 			}
 			esc = false
-		} else if isControl(ch) {
+		} else if isControl(ch) && !isSpace(ch) {
 			return s.failf("unescaped control %q", ch)
 		} else if ch > unicode.MaxRune {
 			return s.failf("invalid Unicode rune %q", ch)
+		} else if nquotes == 1 && (ch == '\n' || ch == '\r') {
+			return s.failf("unescaped %q in basic string", ch)
 		} else {
 			s.buf.WriteRune(ch)
 			esc = ch == '\\'
@@ -383,6 +387,8 @@ func (s *Scanner) scanComment(start rune) error {
 			s.eline++
 			s.ecol = 0
 			break
+		} else if isControl(ch) && !isSpace(ch) {
+			return s.failf("invalid comment rune %q", ch)
 		} else if err != nil {
 			return s.fail(err)
 		}
@@ -464,15 +470,9 @@ func (s *Scanner) scanWord(first rune) error {
 
 	// Classify what this word-shaped thing is.
 	text := s.buf.Bytes()
-	if intRE.Match(text) {
-		if sepCheck.Match(text) {
-			return s.failf("invalid integer literal")
-		}
+	if intRE.Match(text) && !sepCheck.Match(text) {
 		s.tok = Integer
-	} else if floatRE.Match(text) || sfloatRE.Match(text) {
-		if sepCheck.Match(text) {
-			return s.failf("invalid floating-point literal")
-		}
+	} else if (floatRE.Match(text) || sfloatRE.Match(text)) && !sepCheck.Match(text) {
 		s.tok = Float
 	} else if tok := dateTimeToken(text); tok != Invalid {
 		s.tok = tok
@@ -589,7 +589,7 @@ func (s *Scanner) failf(msg string, args ...interface{}) error {
 	return s.setErr(fmt.Errorf("offset %d: "+msg, append([]interface{}{s.end}, args...)...))
 }
 
-func isControl(ch rune) bool { return ch < ' ' && !isSpace(ch) }
+func isControl(ch rune) bool { return ch < ' ' || ch == '\x7f' }
 
 func isSpace(ch rune) bool {
 	return ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t'
