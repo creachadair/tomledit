@@ -272,11 +272,14 @@ func (p *Parser) parseArrayValue() (Array, error) {
 
 		case scanner.Comma:
 			if !wantComma {
-				return nil, fmt.Errorf("at %d: unexpected %v", p.sc.Location().First, scanner.Comma)
+				return nil, fmt.Errorf("at %v: unexpected %v", p.sc.Location().First, scanner.Comma)
 			}
 			wantComma = false
 
 		default:
+			if wantComma {
+				return nil, fmt.Errorf("at %v: got %v, want %v", p.sc.Location().First, next, scanner.Comma)
+			}
 			item, err := p.parseValue()
 			if err != nil {
 				return nil, err
