@@ -245,7 +245,9 @@ func (p *Parser) parseArrayValue() (Array, error) {
 	var wantComma bool
 	for {
 		next, err := p.require()
-		if err != nil {
+		if err == io.EOF {
+			return nil, fmt.Errorf("at %v: unclosed array value", p.sc.Location().First)
+		} else if err != nil {
 			return nil, err
 		}
 		switch next {
