@@ -465,8 +465,14 @@ func (s *Scanner) scanWord(first rune) error {
 	// Classify what this word-shaped thing is.
 	text := s.buf.Bytes()
 	if intRE.Match(text) {
+		if sepCheck.Match(text) {
+			return s.failf("invalid integer literal")
+		}
 		s.tok = Integer
 	} else if floatRE.Match(text) || sfloatRE.Match(text) {
+		if sepCheck.Match(text) {
+			return s.failf("invalid floating-point literal")
+		}
 		s.tok = Float
 	} else if tok := dateTimeToken(text); tok != Invalid {
 		s.tok = tok
@@ -489,6 +495,8 @@ func (s *Scanner) scanFloat(next rune) error {
 	}
 	if !floatRE.Match(s.buf.Bytes()) {
 		return s.failf("invalid %v", Float)
+	} else if sepCheck.Match(s.buf.Bytes()) {
+		return s.failf("invalid floating-point literal")
 	}
 	s.tok = Float
 	return nil
@@ -514,6 +522,7 @@ var (
 	intRE    = regexp.MustCompile(`^(0x[A-Fa-f0-9_]+|0o[0-7_]+|0b[01_]+|[-+]?[0-9_]+)$`)
 	floatRE  = regexp.MustCompile(`^[-+]?([0-9_]+(\.[0-9_]+)?([eE][-+]?[0-9_]+)?)$`)
 	sfloatRE = regexp.MustCompile(`^[-+]?(inf|nan)$`)
+	sepCheck = regexp.MustCompile(`(?:^_)|(?:__+)|(?:_$)`)
 	timeRE   = regexp.MustCompile(`^\d{2}:\d{2}:\d{2}(\.\d+)?$`)
 	dateRE   = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 
