@@ -45,6 +45,9 @@ func mustLoadTests(t *testing.T, dir string) []*testCase {
 }
 
 func TestCompliance(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipped compliance tests because -test.short is set")
+	}
 	t.Run("Valid", func(t *testing.T) {
 		cases := mustLoadTests(t, "testdata/valid")
 		for _, test := range cases {
