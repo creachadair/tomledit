@@ -71,6 +71,7 @@ type Heading struct {
 	Trailer string   // a trailing line comment after the heading (empty if none)
 	IsArray bool     // whether this table is part of a table array
 	Name    Key      // the name of the table
+	Line    int      // the input line where the heading was defined (1-based)
 }
 
 func (Heading) isItem() {}
@@ -89,6 +90,7 @@ type KeyValue struct {
 	Block Comments // a block comment before the key-value pair (empty if none)
 	Name  Key
 	Value Value
+	Line  int // the input line where the key-value was defined (1-based)
 }
 
 func (KeyValue) isItem() {}
@@ -109,7 +111,7 @@ func ParseKey(s string) (Key, error) {
 	if _, err := p.require(); err != nil {
 		return nil, err
 	}
-	key, err := p.parseKey()
+	key, _, err := p.parseKey()
 	if err != nil {
 		return nil, err
 	} else if p.sc.Err() != io.EOF {
@@ -167,6 +169,7 @@ func (k Key) String() string {
 type Value struct {
 	Trailer string // a trailing line-comment after the value (empty if none)
 	X       Datum  // the concrete value
+	Line    int    // the input line where the value is defined (1-based)
 }
 
 // MustValue parses s as a TOML value. It panics if parsing fails.  This is
@@ -200,6 +203,7 @@ func ParseValue(s string) (Value, error) {
 	if _, err := p.require(); err != io.EOF {
 		return Value{}, fmt.Errorf("at %s: extra input after value", p.sc.Location().First)
 	}
+	val.Line = 0
 	return val, nil
 }
 

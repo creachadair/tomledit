@@ -89,7 +89,7 @@ func (p *Parser) parseHeading(tok scanner.Token, comments []string) (*Heading, e
 			return nil, err
 		}
 	}
-	key, err := p.parseKey()
+	key, line, err := p.parseKey()
 	if err != nil {
 		return nil, err
 	}
@@ -111,6 +111,7 @@ func (p *Parser) parseHeading(tok scanner.Token, comments []string) (*Heading, e
 		Block:   Comments(comments),
 		IsArray: isArray,
 		Name:    key,
+		Line:    line,
 	}
 
 	// Check for an optional trailing comment.
@@ -122,7 +123,7 @@ func (p *Parser) parseHeading(tok scanner.Token, comments []string) (*Heading, e
 
 // parseInlineKeyValue parses an undecorated key-value assignment.
 func (p *Parser) parseInlineKeyValue(tok scanner.Token) (*KeyValue, error) {
-	key, err := p.parseKey()
+	key, line, err := p.parseKey()
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +134,7 @@ func (p *Parser) parseInlineKeyValue(tok scanner.Token) (*KeyValue, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &KeyValue{Name: key, Value: val}, nil
+	return &KeyValue{Name: key, Value: val, Line: line}, nil
 }
 
 // parseKeyValue parses a key-value assignment ("name = value").
@@ -155,10 +156,14 @@ func (p *Parser) parseKeyValue(tok scanner.Token, comments []string) (*KeyValue,
 }
 
 // parseKey parses a (possibly compound) key for a heading or key-value assignment.
-func (p *Parser) parseKey() (Key, error) {
+func (p *Parser) parseKey() (Key, int, error) {
 	var result Key
+	var line int
 	for {
 		text := p.sc.Text()
+		if line == 0 {
+			line = p.sc.Location().First.Line
+		}
 		switch p.sc.Token() {
 		case scanner.Word, scanner.Integer, scanner.LocalDate:
 			result = append(result, string(text))
@@ -166,7 +171,7 @@ func (p *Parser) parseKey() (Key, error) {
 		case scanner.String:
 			unq, err := scanner.Unescape(text[1 : len(text)-1]) // remove quotes, unescape
 			if err != nil {
-				return nil, fmt.Errorf("at %s: invalid string: %w", p.sc.Location().First, err)
+				return nil, 0, fmt.Errorf("at %s: invalid string: %w", p.sc.Location().First, err)
 			}
 			result = append(result, string(unq))
 
@@ -176,28 +181,28 @@ func (p *Parser) parseKey() (Key, error) {
 		case scanner.Float:
 			// Take apart float literals that have decimal points in them.
 			if i := bytes.IndexAny(text, "+"); i >= 0 {
-				return nil, fmt.Errorf(`at %s: invalid %q in key`, p.sc.Location().First, text[i])
+				return nil, 0, fmt.Errorf(`at %s: invalid %q in key`, p.sc.Location().First, text[i])
 			}
 			result = append(result, strings.Split(string(text), ".")...)
 
 		default:
-			return nil, fmt.Errorf("at %s: got %v, want name or string",
+			return nil, 0, fmt.Errorf("at %s: got %v, want name or string",
 				p.sc.Location().First, p.sc.Token())
 		}
 
 		// Check for a dotted continuation of the name.
 		next, err := p.require()
 		if err != nil && err != io.EOF {
-			return nil, err
+			return nil, 0, err
 		}
 		if next != scanner.Dot {
-			return result, nil
+			return result, line, nil
 		}
 		if _, err := p.require(
 			scanner.Word, scanner.String, scanner.LString,
 			scanner.Integer, scanner.Float, scanner.LocalDate,
 		); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 	}
 }
@@ -208,6 +213,7 @@ func (p *Parser) parseValue() (Value, error) {
 	var err error
 
 	next := p.sc.Token()
+	line := p.sc.Location().First.Line
 	if next.IsValue() {
 		// Special case: Bare words are not allowed except true and false.
 		text := string(p.sc.Text())
@@ -227,7 +233,7 @@ func (p *Parser) parseValue() (Value, error) {
 	if err != nil {
 		return Value{}, err
 	}
-	return Value{X: datum}, nil
+	return Value{X: datum, Line: line}, nil
 }
 
 // parseArrayValue parses an inline array value on the right-hand side of a
