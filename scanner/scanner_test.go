@@ -50,6 +50,9 @@ constant sorrow.
 		{"'''\nI've seen trouble\nall my days.\n\n'''", []result{
 			{scanner.MLString, "'''\nI've seen trouble\nall my days.\n\n'''"},
 		}},
+		{`"""Here are fifteen quotation marks: ""\"""\"""\"""\"""\"."""`, []result{
+			{scanner.MString, `"""Here are fifteen quotation marks: ""\"""\"""\"""\"""\"."""`},
+		}},
 
 		{`[table] [[array]]`, []result{
 			{scanner.LBracket, "["}, {scanner.Word, "table"}, {scanner.RBracket, "]"},
