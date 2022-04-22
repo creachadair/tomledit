@@ -38,7 +38,11 @@ func TestItems(t *testing.T) {
 		}},
 
 		// Key-value mappings.
-		//
+
+		// - Weird cases.
+		{`"" = true`, []result{{keyValueType, `"" = true`}}},
+		{`'' = false`, []result{{keyValueType, `"" = false`}}},
+
 		// - Basic values.
 		{`x=3`, []result{{keyValueType, `x = 3`}}},
 		{`x=-3.2e+19`, []result{{keyValueType, `x = -3.2e+19`}}},
@@ -145,44 +149,83 @@ hosts = [
 ]
 `
 
-func TestStandardExample(t *testing.T) {
-	items, err := parser.New(strings.NewReader(stdExample)).Items()
+func mustParseItems(t *testing.T, input string) []string {
+	t.Helper()
+	items, err := parser.New(strings.NewReader(input)).Items()
 	if err != nil {
-		t.Fatalf("Parsing standard example: unexpected error: %v", err)
+		t.Logf("Parsing failed: unexpected error: %v", err)
+		t.Logf("Input:\n%s", input)
+		t.FailNow()
 	}
 	var got []string
 	for _, item := range items {
 		typ := strings.Split(fmt.Sprintf("%T", item), ".")
 		got = append(got, fmt.Sprintf("%s %s", typ[len(typ)-1], item))
 	}
-	want := []string{
-		`Comments # This is a TOML document.`,
-		`KeyValue title = "TOML Example"`,
-		`Heading [owner]`,
-		`KeyValue name = "Tom Preston-Werner"`,
-		`KeyValue dob = 1979-05-27T07:32:00-08:00`,
-		`Heading [database]`,
-		`KeyValue server = "192.168.1.1"`,
-		`KeyValue ports = [8000, 8001, 8002]`,
-		`KeyValue connection_max = 5000`,
-		`KeyValue enabled = true`,
-		`Heading [servers]`,
-		// Comment attached to heading
-		`Heading [servers.alpha]`,
-		`KeyValue ip = "10.0.0.1"`,
-		`KeyValue dc = "eqdc10"`,
-		`Heading [servers.beta]`,
-		`KeyValue ip = "10.0.0.2"`,
-		`KeyValue dc = "eqdc10"`,
-		`Heading [clients]`,
-		`KeyValue data = [["gamma", "delta"], [1, 2]]`,
-		// Comment attached to key-value
-		`KeyValue hosts = ["alpha", "omega"]`,
-	}
+	return got
+}
+
+func checkItems(t *testing.T, got, want []string) {
+	t.Helper()
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("Items: (-want, +got)\n%s", diff)
 		t.Logf("Input:\n%s", stdExample)
 	}
+}
+
+func TestSpec(t *testing.T) {
+	t.Run("README", func(t *testing.T) {
+		got := mustParseItems(t, stdExample)
+		checkItems(t, got, []string{
+			`Comments # This is a TOML document.`,
+			`KeyValue title = "TOML Example"`,
+			`Heading [owner]`,
+			`KeyValue name = "Tom Preston-Werner"`,
+			`KeyValue dob = 1979-05-27T07:32:00-08:00`,
+			`Heading [database]`,
+			`KeyValue server = "192.168.1.1"`,
+			`KeyValue ports = [8000, 8001, 8002]`,
+			`KeyValue connection_max = 5000`,
+			`KeyValue enabled = true`,
+			`Heading [servers]`,
+			// Comment attached to heading
+			`Heading [servers.alpha]`,
+			`KeyValue ip = "10.0.0.1"`,
+			`KeyValue dc = "eqdc10"`,
+			`Heading [servers.beta]`,
+			`KeyValue ip = "10.0.0.2"`,
+			`KeyValue dc = "eqdc10"`,
+			`Heading [clients]`,
+			`KeyValue data = [["gamma", "delta"], [1, 2]]`,
+			// Comment attached to key-value
+			`KeyValue hosts = ["alpha", "omega"]`,
+		})
+	})
+	t.Run("Arrays", func(t *testing.T) {
+		got := mustParseItems(t, `
+integers = [ 1, 2, 3 ]
+colors = [ "red", "yellow", "green" ]
+nested_arrays_of_ints = [ [ 1, 2 ], [3, 4, 5] ]
+nested_mixed_array = [ [ 1, 2 ], ["a", "b", "c"] ]
+string_array = [ "all", 'strings', """are the same""", '''type''' ]
+
+# Mixed-type arrays are allowed
+numbers = [ 0.1, 0.2, 0.5, 1, 2, 5 ]
+contributors = [
+  "Foo Bar <foo@example.com>",
+  { name = "Baz Qux", email = "bazqux@example.com", url = "https://example.com/bazqux" }
+]`)
+		checkItems(t, got, []string{
+			`KeyValue integers = [1, 2, 3]`,
+			`KeyValue colors = ["red", "yellow", "green"]`,
+			`KeyValue nested_arrays_of_ints = [[1, 2], [3, 4, 5]]`,
+			`KeyValue nested_mixed_array = [[1, 2], ["a", "b", "c"]]`,
+			`KeyValue string_array = ["all", 'strings', """are the same""", '''type''']`,
+			// Comment attached to key-value
+			`KeyValue numbers = [0.1, 0.2, 0.5, 1, 2, 5]`,
+			`KeyValue contributors = ["Foo Bar <foo@example.com>", {name = "Baz Qux", email = "bazqux@example.com", url = "https://example.com/bazqux"}]`,
+		})
+	})
 }
 
 func TestParseKey(t *testing.T) {
