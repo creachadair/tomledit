@@ -69,7 +69,7 @@ func (p *Parser) parseItem() (Item, error) {
 			return p.parseKeyValue(p.sc.Token(), block)
 
 		default:
-			return nil, fmt.Errorf("at %s: unexpected %v", p.sc.Location(), p.sc.Token())
+			return nil, fmt.Errorf("at %s: unexpected %v", p.sc.Location().First, p.sc.Token())
 		}
 	}
 	if p.sc.Err() == io.EOF && len(block) != 0 {
@@ -166,7 +166,7 @@ func (p *Parser) parseKey() (Key, error) {
 		case scanner.String:
 			unq, err := scanner.Unescape(text[1 : len(text)-1]) // remove quotes, unescape
 			if err != nil {
-				return nil, fmt.Errorf("at %s: invalid string: %w", p.sc.Location(), err)
+				return nil, fmt.Errorf("at %s: invalid string: %w", p.sc.Location().First, err)
 			}
 			result = append(result, string(unq))
 
@@ -176,12 +176,13 @@ func (p *Parser) parseKey() (Key, error) {
 		case scanner.Float:
 			// Take apart float literals that have decimal points in them.
 			if i := bytes.IndexAny(text, "+"); i >= 0 {
-				return nil, fmt.Errorf(`at %s: invalid %q in key`, p.sc.Location(), text[i])
+				return nil, fmt.Errorf(`at %s: invalid %q in key`, p.sc.Location().First, text[i])
 			}
 			result = append(result, strings.Split(string(text), ".")...)
 
 		default:
-			return nil, fmt.Errorf("at %s: got %v, want name or string", p.sc.Location(), p.sc.Token())
+			return nil, fmt.Errorf("at %s: got %v, want name or string",
+				p.sc.Location().First, p.sc.Token())
 		}
 
 		// Check for a dotted continuation of the name.
@@ -212,7 +213,7 @@ func (p *Parser) parseValue() (Value, error) {
 		text := string(p.sc.Text())
 		if next == scanner.Word && text != "true" && text != "false" {
 			return Value{}, fmt.Errorf("at %s: got %v (%q), wanted value, array, or inline table",
-				p.sc.Location(), next, text)
+				p.sc.Location().First, next, text)
 		}
 		datum = Token{Type: next, text: text}
 	} else if next == scanner.LBracket {
@@ -221,7 +222,7 @@ func (p *Parser) parseValue() (Value, error) {
 		datum, err = p.parseInlineValue()
 	} else {
 		return Value{}, fmt.Errorf("at %s: got %v, wanted value, array, or inline table",
-			p.sc.Location(), next)
+			p.sc.Location().First, next)
 	}
 	if err != nil {
 		return Value{}, err
