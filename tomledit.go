@@ -57,6 +57,9 @@
 //    # unattached comment
 //    # this block stands alone
 //
+//    # another unattached comment
+//    # this block is separate from the one above
+//
 //    # attached comment, belongs to the following table
 //    [tablename]
 //

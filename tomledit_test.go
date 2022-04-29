@@ -41,7 +41,10 @@ func mustFormat(t *testing.T, doc *tomledit.Document, more ...string) {
 }
 
 const testDoc = `
-# free
+# free 1 line 1
+# free 1 line 2
+
+# free 2
 
 # top-level mapping
 p = { q = [], r = {}}
@@ -112,7 +115,30 @@ func TestFormat(t *testing.T) {
 
 func TestScan(t *testing.T) {
 	doc := mustParse(t, testDoc)
-	t.Run("All", func(t *testing.T) {
+
+	// Verify that free comments are kept free and correctly blocked.
+	t.Run("Comments", func(t *testing.T) {
+		var got []string
+		for _, item := range doc.Global.Items {
+			if c, ok := item.(parser.Comments); ok {
+				got = append(got, c.String())
+			}
+		}
+		for _, s := range doc.Sections {
+			for _, item := range s.Items {
+				if c, ok := item.(parser.Comments); ok {
+					got = append(got, c.String())
+				}
+			}
+		}
+		want := []string{"# free 1 line 1\n# free 1 line 2", "# free 2", "# free comment again"}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("Wrong comments: (-want, +got)\n%s", diff)
+		}
+	})
+
+	// Check that the expected key-value mappings are captured, in order.
+	t.Run("KeyValues", func(t *testing.T) {
 		var keys []string
 		doc.Scan(func(key parser.Key, elt *tomledit.Entry) bool {
 			keys = append(keys, key.String())
