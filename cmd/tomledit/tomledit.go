@@ -30,19 +30,26 @@ help [command/topic]`,
 
 		Commands: []*command.C{
 			{
-				Name: "list",
-				Help: "List all the keys defined in the file.",
+				Name:  "list",
+				Usage: "<key> ...",
+				Help: `List the keys of key-value mappings.
+
+With no keys, all the key-value mappings defined in the file are listed.
+Otherwise, only those mappings having the given prefix are listed.`,
 
 				Run: func(env *command.Env, args []string) error {
-					if len(args) != 0 {
-						return env.Usagef("extra arguments after command")
-					}
 					doc, err := env.Config.(*settings).loadDocument()
 					if err != nil {
 						return err
 					}
+					keys, err := parseKeys(args)
+					if err != nil {
+						return err
+					}
 					doc.Scan(func(key parser.Key, _ *tomledit.Entry) bool {
-						fmt.Println(key)
+						if hasPrefixIn(key, keys) {
+							fmt.Println(key)
+						}
 						return true
 					})
 					return nil
@@ -207,4 +214,25 @@ func (s *settings) saveDocument(doc *tomledit.Document) error {
 		return fmt.Errorf("formatting output: %w", err)
 	}
 	return f.Close()
+}
+
+func parseKeys(args []string) ([]parser.Key, error) {
+	var keys []parser.Key
+	for _, arg := range args {
+		key, err := parser.ParseKey(arg)
+		if err != nil {
+			return nil, fmt.Errorf("parsing key %q: %w", arg, err)
+		}
+		keys = append(keys, key)
+	}
+	return keys, nil
+}
+
+func hasPrefixIn(needle parser.Key, keys []parser.Key) bool {
+	for _, key := range keys {
+		if key.IsPrefixOf(needle) {
+			return true
+		}
+	}
+	return len(keys) == 0
 }
