@@ -13,6 +13,7 @@ import (
 	"github.com/creachadair/command"
 	"github.com/creachadair/tomledit"
 	"github.com/creachadair/tomledit/parser"
+	"github.com/creachadair/tomledit/transform"
 )
 
 func main() {
@@ -109,6 +110,66 @@ help [command/topic]`,
 					return cfg.saveDocument(doc)
 				},
 			},
+			{
+				Name: "add",
+				Usage: `<table> <key> <value>
+<global-key> <value>`,
+				Help: `Add a key-value mapping to the specified section.
+
+If no table name is specified, a mapping is added to the global table.
+Otherwise, the mapping is added to the specified table (which must exist).
+An error is reported if the key already exists, unless -replace is set.`,
+
+				SetFlags: func(env *command.Env, fs *flag.FlagSet) {
+					cfg := env.Config.(*settings)
+					fs.BoolVar(&cfg.Replace, "replace", false, "Replace an existing mapping if present")
+					fs.StringVar(&cfg.Text, "comment", "", "Comment text to add to the mapping")
+				},
+
+				Run: func(env *command.Env, args []string) error {
+					if len(args) < 2 || len(args) > 3 {
+						return env.Usagef("wrong number of arguments")
+					}
+					key, err := parser.ParseKey(args[0])
+					if err != nil {
+						return fmt.Errorf("parsing key %q: %w", args[0], err)
+					}
+					val, err := parser.ParseValue(args[len(args)-1])
+					if err != nil {
+						return fmt.Errorf("parsing value: %w", err)
+					}
+					var section parser.Key
+					if len(args) == 3 {
+						section = key
+						key, err = parser.ParseKey(args[1])
+						if err != nil {
+							return fmt.Errorf("parsing key %q: %w", args[1], err)
+						}
+					}
+
+					cfg := env.Config.(*settings)
+					doc, err := cfg.loadDocument()
+					if err != nil {
+						return err
+					}
+					table := transform.FindTable(doc, section...)
+					if table == nil {
+						return fmt.Errorf("table %q not found", section)
+					}
+					var block parser.Comments
+					if cfg.Text != "" {
+						block = parser.Comments{cfg.Text}
+					}
+					if !transform.InsertMapping(table.Section, &parser.KeyValue{
+						Block: block,
+						Name:  key,
+						Value: val,
+					}, cfg.Replace) {
+						return fmt.Errorf("key %q exists (use -replace to replace it)", key)
+					}
+					return cfg.saveDocument(doc)
+				},
+			},
 			command.HelpCommand(nil),
 		},
 	}
@@ -116,7 +177,9 @@ help [command/topic]`,
 }
 
 type settings struct {
-	Path string
+	Path    string
+	Replace bool
+	Text    string
 }
 
 func (s *settings) loadDocument() (*tomledit.Document, error) {
