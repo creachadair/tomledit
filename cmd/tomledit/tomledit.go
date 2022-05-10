@@ -20,7 +20,11 @@ func main() {
 		Name: filepath.Base(os.Args[0]),
 		Usage: `[options] command [args...]
 help [command/topic]`,
-		Help: `Read or modify the contents of a TOML file.`,
+		Help: `Read or modify the contents of a TOML file.
+
+For commands accepting a value, TOML syntax is required.
+As a shorthand for bare string values, prefix arguments with "@":
+The argument @foo is parsed as if it were 'foo'.`,
 
 		SetFlags: func(_ *command.Env, fs *flag.FlagSet) {
 			fs.StringVar(&cfg.Path, "path", "", "Path of TOML file to process")

@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"strings"
 
 	"github.com/creachadair/command"
 	"github.com/creachadair/tomledit"
@@ -79,7 +80,7 @@ var cmdSet = &command.C{
 		if err != nil {
 			return fmt.Errorf("parsing key: %w", err)
 		}
-		val, err := parser.ParseValue(args[1])
+		val, err := parseValue(args[1])
 		if err != nil {
 			return fmt.Errorf("invalid TOML value: %w", err)
 		}
@@ -125,7 +126,7 @@ An error is reported if the key already exists, unless -replace is set.`,
 		if err != nil {
 			return fmt.Errorf("parsing key %q: %w", args[0], err)
 		}
-		val, err := parser.ParseValue(args[len(args)-1])
+		val, err := parseValue(args[len(args)-1])
 		if err != nil {
 			return fmt.Errorf("parsing value: %w", err)
 		}
@@ -181,4 +182,17 @@ func hasPrefixIn(needle parser.Key, keys []parser.Key) bool {
 		}
 	}
 	return len(keys) == 0
+}
+
+func parseValue(s string) (parser.Value, error) {
+	if strings.HasPrefix(s, "@") {
+		var actual string
+		if strings.Contains(s, "\n") {
+			actual = `'''` + s[1:] + `'''`
+		} else {
+			actual = `'` + s[1:] + `'`
+		}
+		return parser.ParseValue(actual)
+	}
+	return parser.ParseValue(s)
 }
