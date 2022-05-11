@@ -8,6 +8,7 @@ import (
 	"github.com/creachadair/command"
 	"github.com/creachadair/tomledit"
 	"github.com/creachadair/tomledit/parser"
+	"github.com/creachadair/tomledit/scanner"
 	"github.com/creachadair/tomledit/transform"
 )
 
@@ -186,12 +187,7 @@ func hasPrefixIn(needle parser.Key, keys []parser.Key) bool {
 
 func parseValue(s string) (parser.Value, error) {
 	if strings.HasPrefix(s, "@") {
-		var actual string
-		if strings.Contains(s, "\n") {
-			actual = `'''` + s[1:] + `'''`
-		} else {
-			actual = `'` + s[1:] + `'`
-		}
+		actual := `"` + string(scanner.Escape(s[1:])) + `"`
 		return parser.ParseValue(actual)
 	}
 	return parser.ParseValue(s)
