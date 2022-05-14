@@ -24,7 +24,7 @@ help [command/topic]`,
 
 For commands accepting a value, TOML syntax is required.
 As a shorthand for bare string values, prefix arguments with "@":
-The argument @foo is parsed as if it were 'foo'.`,
+The argument @foo is parsed as if it were a basic string "foo".`,
 
 		SetFlags: func(_ *command.Env, fs *flag.FlagSet) {
 			fs.StringVar(&cfg.Path, "path", "", "Path of TOML file to process")
