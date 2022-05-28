@@ -18,7 +18,7 @@
 // document will be reflected when it is written back out.
 //
 // Note that the parser does not validate the semantics of the resulting
-// document. Issues such as duplicate keys, inccorrect table order,
+// document. Issues such as duplicate keys, incorrect table order,
 // redefinitions, and so forth are not reported by the parser.
 //
 // Formatting
