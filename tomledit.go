@@ -2,17 +2,17 @@
 
 // Package tomledit allows structural edits of a TOML document.
 //
-// Parsing
+// # Parsing
 //
 // To parse a TOML text into a Document, call Parse:
 //
-//    f, err := os.Open("config.toml")
-//    ...
-//    defer f.Close()
-//    doc, err := tomledit.Parse(f)
-//    if err != nil {
-//       log.Fatalf("Parse: %v", err)
-//    }
+//	f, err := os.Open("config.toml")
+//	...
+//	defer f.Close()
+//	doc, err := tomledit.Parse(f)
+//	if err != nil {
+//	   log.Fatalf("Parse: %v", err)
+//	}
 //
 // Once parsed, the structure of the Document is mutable, and changes to the
 // document will be reflected when it is written back out.
@@ -21,16 +21,16 @@
 // document. Issues such as duplicate keys, incorrect table order,
 // redefinitions, and so forth are not reported by the parser.
 //
-// Formatting
+// # Formatting
 //
 // To write a Document back into TOML format, use a Formatter:
 //
-//    var cfg tomledit.Formatter
-//    if err := cfg.Format(os.Stdout, doc); err != nil {
-//       log.Fatalf("Format: %v", err)
-//    }
+//	var cfg tomledit.Formatter
+//	if err := cfg.Format(os.Stdout, doc); err != nil {
+//	   log.Fatalf("Format: %v", err)
+//	}
 //
-// Structure
+// # Structure
 //
 // A Document consists of one or more sections: A "global" section at the
 // beginning of the input, with top-level key-value mappings that are not
@@ -44,7 +44,7 @@
 // mapping (concrete type *parser.KeyValue). Modifying either of these fields
 // updates the structure of the section.
 //
-// Comments
+// # Comments
 //
 // Each heading or key-value may have a block comment comment attached to
 // it. Block comments are attached to an item if they occur immediately before
@@ -54,22 +54,22 @@
 // Headings and values may also have trailing line comments attached, if they
 // occur on the same line as the value. For example:
 //
-//    # unattached comment
-//    # this block stands alone
+//	# unattached comment
+//	# this block stands alone
 //
-//    # another unattached comment
-//    # this block is separate from the one above
+//	# another unattached comment
+//	# this block is separate from the one above
 //
-//    # attached comment, belongs to the following table
-//    [tablename]
+//	# attached comment, belongs to the following table
+//	[tablename]
 //
-//    foo = 'bar'  # attached comment, belongs to the preceding mapping
+//	foo = 'bar'  # attached comment, belongs to the preceding mapping
 //
 // The comments attached to an item move with that item, and retain their
 // attachments when the document is formatted. To remove an attached comment,
 // set the corresponding field to a zero value.
 //
-// Keys and Values
+// # Keys and Values
 //
 // Keys are denoted as slices of strings (parser.Key), representing the
 // dot-separated components of a TOML name (e.g., left.center.right).  Use the
