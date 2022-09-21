@@ -322,6 +322,30 @@ func TestParseValue(t *testing.T) {
 	}
 }
 
+func TestCleanTrailer(t *testing.T) {
+	tests := []struct {
+		input, want string
+	}{
+		{"", "#"},
+		{"  \t ", "#"},
+		{"#", "#"},
+		{" # ", "#"},
+		{"abc", "# abc"},
+		{"# abc", "# abc"},
+		{"  abc  ", "# abc"},
+		{"  # abc  ", "# abc"},
+		{"abc\ndef", "# abc def"},
+		{"# abc\ndef ghi", "# abc def ghi"},
+	}
+
+	for _, test := range tests {
+		got := parser.CleanTrailer(test.input)
+		if got != test.want {
+			t.Errorf("CleanTrailer(%q):\ngot:  %s\nwant: %s", test.input, got, test.want)
+		}
+	}
+}
+
 func mustParseKey(t *testing.T, s string) parser.Key {
 	t.Helper()
 
