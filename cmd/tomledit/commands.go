@@ -20,12 +20,12 @@ var cmdList = &command.C{
 With no keys, all the key-value mappings defined in the file are listed.
 Otherwise, only those mappings having the given prefix are listed.`,
 
-	Run: func(env *command.Env, args []string) error {
+	Run: func(env *command.Env) error {
 		doc, err := env.Config.(*settings).loadDocument()
 		if err != nil {
 			return err
 		}
-		keys, err := parseKeys(args)
+		keys, err := parseKeys(env.Args)
 		if err != nil {
 			return err
 		}
@@ -44,11 +44,11 @@ var cmdPrint = &command.C{
 	Usage: "<key>",
 	Help:  "Print the value of the first definition of a key.",
 
-	Run: func(env *command.Env, args []string) error {
-		if len(args) == 0 {
+	Run: func(env *command.Env) error {
+		if len(env.Args) == 0 {
 			return env.Usagef("missing required key argument")
 		}
-		key, err := parser.ParseKey(args[0])
+		key, err := parser.ParseKey(env.Args[0])
 		if err != nil {
 			return fmt.Errorf("parsing key: %w", err)
 		}
@@ -73,15 +73,15 @@ var cmdSet = &command.C{
 	Usage: "<key> <value>",
 	Help:  "Set the value of an existing key.",
 
-	Run: func(env *command.Env, args []string) error {
-		if len(args) != 2 {
+	Run: func(env *command.Env) error {
+		if len(env.Args) != 2 {
 			return env.Usagef("required arguments are <key> <value>")
 		}
-		key, err := parser.ParseKey(args[0])
+		key, err := parser.ParseKey(env.Args[0])
 		if err != nil {
 			return fmt.Errorf("parsing key: %w", err)
 		}
-		val, err := parseValue(args[1])
+		val, err := parseValue(env.Args[1])
 		if err != nil {
 			return fmt.Errorf("invalid TOML value: %w", err)
 		}
@@ -119,24 +119,24 @@ An error is reported if the key already exists, unless -replace is set.`,
 		fs.StringVar(&cfg.Text, "comment", "", "Comment text to add to the mapping")
 	},
 
-	Run: func(env *command.Env, args []string) error {
-		if len(args) < 2 || len(args) > 3 {
+	Run: func(env *command.Env) error {
+		if len(env.Args) < 2 || len(env.Args) > 3 {
 			return env.Usagef("wrong number of arguments")
 		}
-		key, err := parser.ParseKey(args[0])
+		key, err := parser.ParseKey(env.Args[0])
 		if err != nil {
-			return fmt.Errorf("parsing key %q: %w", args[0], err)
+			return fmt.Errorf("parsing key %q: %w", env.Args[0], err)
 		}
-		val, err := parseValue(args[len(args)-1])
+		val, err := parseValue(env.Args[len(env.Args)-1])
 		if err != nil {
 			return fmt.Errorf("parsing value: %w", err)
 		}
 		var section parser.Key
-		if len(args) == 3 {
+		if len(env.Args) == 3 {
 			section = key
-			key, err = parser.ParseKey(args[1])
+			key, err = parser.ParseKey(env.Args[1])
 			if err != nil {
-				return fmt.Errorf("parsing key %q: %w", args[1], err)
+				return fmt.Errorf("parsing key %q: %w", env.Args[1], err)
 			}
 		}
 
