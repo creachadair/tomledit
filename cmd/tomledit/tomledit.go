@@ -63,13 +63,10 @@ func (s *settings) saveDocument(doc *tomledit.Document) error {
 	if s.Path == "" {
 		return errors.New("no output -path is set")
 	}
-	f, err := atomicfile.New(s.Path, 0600)
-	if err != nil {
-		return err
-	}
-	defer f.Cancel()
-	if err := tomledit.Format(f, doc); err != nil {
-		return fmt.Errorf("formatting output: %w", err)
-	}
-	return f.Close()
+	return atomicfile.Tx(s.Path, 0600, func(f *atomicfile.File) error {
+		if err := tomledit.Format(f, doc); err != nil {
+			return fmt.Errorf("formatting output: %w", err)
+		}
+		return nil
+	})
 }
