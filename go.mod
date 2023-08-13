@@ -1,6 +1,6 @@
 module github.com/creachadair/tomledit
 
-go 1.19
+go 1.20
 
 require (
 	github.com/creachadair/atomicfile v0.3.1
