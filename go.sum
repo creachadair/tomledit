@@ -1,6 +1,6 @@
-github.com/creachadair/atomicfile v0.3.1 h1:yQORkHjSYySh/tv5th1dkKcn02NEW5JleB84sjt+W4Q=
-github.com/creachadair/atomicfile v0.3.1/go.mod h1:mwfrkRxFKwpNAflYZzytbSwxvbK6fdGRRlp0KEQc0qU=
-github.com/creachadair/command v0.0.7 h1:zGh+8wKONrWv9KN8XaISN4SwO1wNix0amIoB5pn8890=
-github.com/creachadair/command v0.0.7/go.mod h1:yIUMnyAYSHyN8csAKBlfms3UnvEJywfHvm2xwTKKte4=
+github.com/creachadair/atomicfile v0.3.2 h1:f8haU8NcZ1NABfhHafpJIG+atR7481lqnx04clrxSOA=
+github.com/creachadair/atomicfile v0.3.2/go.mod h1:3ZSR9ApQoZLvVNI5eRhzpU0a2Efu88TgNBIm0jRXCgA=
+github.com/creachadair/command v0.1.1 h1:1XNoAcb8N++v38lwT41gb3hf56ZUSwmUicUi0qmF9v4=
+github.com/creachadair/command v0.1.1/go.mod h1:hTu+WcX2tWwn3qgux8b26e6QKJZ7Tm45/5miXSdgxa4=
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
 github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
