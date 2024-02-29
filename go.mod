@@ -6,6 +6,6 @@ toolchain go1.21.3
 
 require (
 	github.com/creachadair/atomicfile v0.3.3
-	github.com/creachadair/command v0.1.7
+	github.com/creachadair/command v0.1.8
 	github.com/google/go-cmp v0.6.0
 )
