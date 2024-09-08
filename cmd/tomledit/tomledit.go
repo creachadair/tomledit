@@ -38,7 +38,7 @@ The argument @foo is parsed as if it were a basic string "foo".`,
 			command.HelpCommand(nil),
 		},
 	}
-	command.RunOrFail(root.NewEnv(&cfg), os.Args[1:])
+	command.RunOrFail(root.NewEnv(&cfg).MergeFlags(false), os.Args[1:])
 }
 
 type settings struct {
