@@ -1,6 +1,7 @@
 # tomledit
 
 [![GoDoc](https://img.shields.io/static/v1?label=godoc&message=reference&color=yellowgreen)](https://pkg.go.dev/github.com/creachadair/tomledit)
+[![CI](https://github.com/creachadair/tomledit/actions/workflows/go-presubmit.yml/badge.svg?event=push&branch=main)](https://github.com/creachadair/tomledit/actions/workflows/go-presubmit.yml)
 
 This repository defines a Go library to parse and manipulate the syntactic
 structure of TOML documents.  Unlike other TOML libraries, this one does not
