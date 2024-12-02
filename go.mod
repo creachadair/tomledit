@@ -5,7 +5,7 @@ go 1.23
 toolchain go1.23.0
 
 require (
-	github.com/creachadair/atomicfile v0.3.5
+	github.com/creachadair/atomicfile v0.3.6
 	github.com/creachadair/command v0.1.19
 	github.com/google/go-cmp v0.6.0
 	honnef.co/go/tools v0.5.1
