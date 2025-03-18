@@ -3,7 +3,7 @@ module github.com/creachadair/tomledit
 go 1.23
 
 require (
-	github.com/creachadair/atomicfile v0.3.7
+	github.com/creachadair/atomicfile v0.3.8
 	github.com/creachadair/command v0.1.22
 	github.com/google/go-cmp v0.7.0
 	honnef.co/go/tools v0.5.1
