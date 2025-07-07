@@ -2,10 +2,10 @@ github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c h1:pxW6RcqyfI9/k
 github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
 github.com/creachadair/atomicfile v0.3.8 h1:PyMIBZHZunTF+2+OSJCUg4XWO9nh6NwIacUBtF6tdg8=
 github.com/creachadair/atomicfile v0.3.8/go.mod h1:oZrfNyYdwMjCD+eKNqsnPmdnQ54z4ujOoYvNTZyuJ2A=
-github.com/creachadair/command v0.1.22 h1:WmdrURwZdmPD1jm13SjKooaMoqo7mW1qI2BPCShs154=
-github.com/creachadair/command v0.1.22/go.mod h1:YFc+OMGucqTpxwQg/iJnNg8BMNmRPDK60rYy8ckgKwE=
-github.com/creachadair/mds v0.24.1 h1:bzL4ItCtAUxxO9KkotP0PVzlw4tnJicAcjPu82v2mGs=
-github.com/creachadair/mds v0.24.1/go.mod h1:ArfS0vPHoLV/SzuIzoqTEZfoYmac7n9Cj8XPANHocvw=
+github.com/creachadair/command v0.1.23 h1:t4xh3gg2Q47kYOAztYe8CzQldleZyaodREScG8f0ICY=
+github.com/creachadair/command v0.1.23/go.mod h1:2Vr6pQv7TsC30LdoyshYiCVYhVx6NvySEp631sHcS2o=
+github.com/creachadair/mds v0.25.0 h1:WqDqbtEZDLfqI0WS7lNtPWTbd9jEZpyn+UX1wa/SGjE=
+github.com/creachadair/mds v0.25.0/go.mod h1:0oeHt9QWu8VfnmskOL4zi2CumjEvB29ScmtOmdrhFeU=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
 golang.org/x/exp/typeparams v0.0.0-20231108232855-2478ac86f678 h1:1P7xPZEwZMoBoz0Yze5Nx2/4pxj6nw9ZqHWXqP0iRgQ=
