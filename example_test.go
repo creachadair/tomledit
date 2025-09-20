@@ -3,6 +3,7 @@
 package tomledit_test
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -11,6 +12,29 @@ import (
 	"github.com/creachadair/tomledit"
 	"github.com/creachadair/tomledit/parser"
 )
+
+func Example_replaceStrValues() {
+	data := `
+	[ A.B ]
+	C = "Vc"
+	`
+	doc, err := tomledit.Parse(strings.NewReader(data))
+	if err != nil {
+		log.Fatalf("Parse: %v", err)
+	}
+
+	target := doc.First("A", "B", "C")
+	target.Value = parser.MustValue(`"Vc2"`).WithComment("replaced!")
+
+	var buf bytes.Buffer
+	if err := tomledit.Format(&buf, doc); err != nil {
+		log.Fatalf("Format: %v", err)
+	}
+	fmt.Println(buf.String())
+	// Output:
+	// [A.B]
+	// C = "Vc2"  # replaced!
+}
 
 func ExampleParse() {
 	doc, err := tomledit.Parse(strings.NewReader(`# Example config
