@@ -12,6 +12,25 @@ import (
 	"github.com/creachadair/tomledit/parser"
 )
 
+func Example_replaceStrValues() {
+	data := `
+	[ A.B ]
+	C = "Vc"
+	`
+	doc, err := tomledit.Parse(strings.NewReader(data))
+	if err != nil {
+		log.Fatalf("Parse: %v", err)
+	}
+
+	target := doc.First("A", "B", "C")
+	target.Value = parser.MustValue(`"Vc2"`).WithComment("replaced!")
+
+	tomledit.Format(os.Stdout, doc)
+	// Output:
+	// [A.B]
+	// C = "Vc2"  # replaced!
+}
+
 func ExampleParse() {
 	doc, err := tomledit.Parse(strings.NewReader(`# Example config
 
