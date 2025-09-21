@@ -3,7 +3,6 @@
 package tomledit_test
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -26,11 +25,7 @@ func Example_replaceStrValues() {
 	target := doc.First("A", "B", "C")
 	target.Value = parser.MustValue(`"Vc2"`).WithComment("replaced!")
 
-	var buf bytes.Buffer
-	if err := tomledit.Format(&buf, doc); err != nil {
-		log.Fatalf("Format: %v", err)
-	}
-	fmt.Println(buf.String())
+	tomledit.Format(os.Stdout, doc)
 	// Output:
 	// [A.B]
 	// C = "Vc2"  # replaced!
