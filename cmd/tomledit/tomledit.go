@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -63,8 +64,8 @@ func (s *settings) saveDocument(doc *tomledit.Document) error {
 	if s.Path == "" {
 		return errors.New("no output -path is set")
 	}
-	return atomicfile.Tx(s.Path, 0600, func(f *atomicfile.File) error {
-		if err := tomledit.Format(f, doc); err != nil {
+	return atomicfile.Tx(s.Path, 0600, func(w io.Writer) error {
+		if err := tomledit.Format(w, doc); err != nil {
 			return fmt.Errorf("formatting output: %w", err)
 		}
 		return nil
