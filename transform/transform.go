@@ -72,7 +72,7 @@ func WithLogWriter(ctx context.Context, w io.Writer) context.Context {
 }
 
 type logWriter struct {
-	log   func(string, ...interface{})
+	log   func(string, ...any)
 	close func() error
 }
 
@@ -80,14 +80,14 @@ func newLogWriter(ctx context.Context) logWriter {
 	if v := ctx.Value(stepLogKey{}); v != nil {
 		tw := tabwriter.NewWriter(v.(io.Writer), 0, 8, 1, ' ', 0)
 		return logWriter{
-			log: func(msg string, args ...interface{}) {
+			log: func(msg string, args ...any) {
 				fmt.Fprintf(tw, msg, args...)
 			},
 			close: tw.Flush,
 		}
 	}
 	return logWriter{
-		log:   func(string, ...interface{}) {},
+		log:   func(string, ...any) {},
 		close: func() error { return nil },
 	}
 }

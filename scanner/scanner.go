@@ -585,8 +585,8 @@ func (s *Scanner) fail(err error) error {
 	return s.setErr(fmt.Errorf("offset %d: unexpected error: %w", s.end, err))
 }
 
-func (s *Scanner) failf(msg string, args ...interface{}) error {
-	return s.setErr(fmt.Errorf("offset %d: "+msg, append([]interface{}{s.end}, args...)...))
+func (s *Scanner) failf(msg string, args ...any) error {
+	return s.setErr(fmt.Errorf("offset %d: "+msg, append([]any{s.end}, args...)...))
 }
 
 func isControl(ch rune) bool { return ch < ' ' || ch == '\x7f' }

@@ -259,7 +259,7 @@ type Entry struct {
 	// For sections: *[]*Section
 	// For top-level mappings: *[]parser.Item
 	// For inline mappings: *parser.Datum containing parser.Inline
-	parent interface{}
+	parent any
 }
 
 func (e Entry) String() string {
