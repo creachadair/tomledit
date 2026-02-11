@@ -39,7 +39,7 @@ func (c Comments) Clean() []string {
 	// the use of append here is intentional.
 	out := make([]string, 0, len(c))
 	for _, s := range c {
-		for _, line := range strings.Split(strings.TrimSpace(s), "\n") {
+		for line := range strings.SplitSeq(strings.TrimSpace(s), "\n") {
 			clean := strings.TrimSpace(line)
 			if clean == "" {
 				clean = "#" // skip trailing space

@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/creachadair/tomledit/scanner"
@@ -339,10 +340,8 @@ func (p *Parser) require(tokens ...scanner.Token) (scanner.Token, error) {
 		return scanner.Invalid, err
 	} else if len(tokens) != 0 {
 		got := p.sc.Token()
-		for _, want := range tokens {
-			if got == want {
-				return got, nil
-			}
+		if slices.Contains(tokens, got) {
+			return got, nil
 		}
 		return scanner.Invalid, fmt.Errorf("at %s: got %v, wanted %v",
 			p.sc.Location().First, got, tokLabel(tokens))
