@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	keyValueType = reflect.TypeOf((*parser.KeyValue)(nil))
-	headingType  = reflect.TypeOf((*parser.Heading)(nil))
-	commentsType = reflect.TypeOf(parser.Comments(nil))
+	keyValueType = reflect.TypeFor[*parser.KeyValue]()
+	headingType  = reflect.TypeFor[*parser.Heading]()
+	commentsType = reflect.TypeFor[parser.Comments]()
 )
 
 func TestItems(t *testing.T) {
