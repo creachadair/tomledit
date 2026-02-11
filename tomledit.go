@@ -343,7 +343,7 @@ func parseSections(items []parser.Item) []*Section {
 	sections := []*Section{new(Section)}
 
 	cur := 0
-	for i := 0; i < len(items); i++ {
+	for i := range items {
 		h, ok := items[i].(*parser.Heading)
 		if !ok {
 			continue

@@ -564,7 +564,7 @@ func (s *Scanner) readWhile(f func(rune) bool) (rune, error) {
 
 // readHex4 reads exactly 4 hexadecimal digits from the input.
 func (s *Scanner) readHex4() error {
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		ch, err := s.rune()
 		if err != nil {
 			return err
