@@ -1,9 +1,9 @@
 module github.com/creachadair/tomledit
 
-go 1.24
+go 1.25
 
 require (
-	github.com/creachadair/atomicfile v0.4.0
+	github.com/creachadair/atomicfile v0.4.1
 	github.com/creachadair/command v0.2.0
 	github.com/google/go-cmp v0.7.0
 )
