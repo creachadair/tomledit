@@ -2,8 +2,8 @@ github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c h1:pxW6RcqyfI9/k
 github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
 github.com/creachadair/atomicfile v0.4.2 h1:pSSsKxmUefqCTg+QgyCG2bw1KmsB76apBL4lhJjichI=
 github.com/creachadair/atomicfile v0.4.2/go.mod h1:ts9VunJluQvSXtkrl0YlDn9ckZaS+eMkBW2g20gB5II=
-github.com/creachadair/command v0.2.10 h1:+qW9WcFTu8Cg8rM2RWa9pZU7Cv0sxdLQYjgMOTckD+M=
-github.com/creachadair/command v0.2.10/go.mod h1:p7iYfSCIAVz+oYYIsXsya1hjKgjitd3U/0eOrzTWkBQ=
+github.com/creachadair/command v0.2.11 h1:YPpsfKHDgVvOWs0kzlZz1RviLbuyb/tBT39yzbtRSAU=
+github.com/creachadair/command v0.2.11/go.mod h1:p7iYfSCIAVz+oYYIsXsya1hjKgjitd3U/0eOrzTWkBQ=
 github.com/creachadair/mds v0.30.4 h1:Wfc4KnlGMlhwT73R0SG449pW0L0+v/PSsq14odXrZM8=
 github.com/creachadair/mds v0.30.4/go.mod h1:dMBTCSy3iS3dwh4Rb1zxeZz2d7K8+N24GCTsayWtQRI=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
