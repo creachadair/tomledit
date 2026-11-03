@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/creachadair/atomicfile v0.4.2
-	github.com/creachadair/command v0.2.12
+	github.com/creachadair/command v0.2.13
 	github.com/google/go-cmp v0.7.0
 )
 
